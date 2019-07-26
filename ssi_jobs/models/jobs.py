@@ -75,8 +75,9 @@ class Jobs(models.Model):
         if vals.get('name', _('New')) == _('New'):
             vals['name'] = self.env['ir.sequence'].next_by_code('ssi_job_sequence') or _('New')
         res = super(Jobs, self).create(vals)
-        job_id = self.env['ssi_jobs'].search([])[0].id
-        raise UserError(_(job_id))
+        job_id = self.env['ssi_jobs'].sudo().search([])[0].id
+        self.env['ssi_jobs'].sudo().create({'name':self.env['ir.sequence'].next_by_code('ssi_job_sequence'),'ssi_job_id': job_id})
+        # raise UserError(_(job_id))
         return res
 
     @api.model
