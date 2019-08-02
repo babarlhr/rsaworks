@@ -8,7 +8,24 @@ class HrAttendance(models.Model):
     status = fields.Selection(string="Status", selection=[(
         'open', 'Open'), ('approved', 'Approved')], default='open', track_visibility='onchange')
     attendance_lines = fields.One2many('hr.attendance.line', 'attendance_id', string='Attendance Lines', copy=True)
-
+    
+    @api.one
+    def approve_attendance(self):
+        for line in self.attendance_lines:
+            data = {}
+            data = {
+                'workorder_id': line.workorder_id.id,
+                'workcenter_id': line.workorder_id.workcenter_id.id,
+                'loss_id': 7,
+                'user_id': line.employee_id.user_id.id,
+                'date_start': line.check_in,
+                'date_end': line.check_out,
+            }
+            line.write({
+                'status': 'approved'
+            })
+            self.env['mrp.workcenter.productivity'].sudo().create(data)
+        
 class HrAttendanceLine(models.Model):
     _name = "hr.attendance.line"
     _description = "Attendance  Detail"
@@ -30,18 +47,3 @@ class HrAttendanceLine(models.Model):
        'mrp.workorder', ondelete='set null', string="Work Order", index=True)
 #    labor_code_id = fields.Many2one(
 #        'x_labor.codes', ondelete='set null', string="Labor Code", index=True)
-
-    @api.one
-    def approve_attendance(self):
-        data = {
-            'workorder_id': self.workorder_id.id,
-            'workcenter_id': self.workorder_id.workcenter_id.id,
-            'loss_id': 7,
-            'user_id': self.employee_id.user_id.id,
-            'date_start': self.check_in,
-            'date_end': self.check_out,
-        }
-        self.write({
-            'status': 'approved'
-        })
-        self.env['mrp.workcenter.productivity'].sudo().create(data)
