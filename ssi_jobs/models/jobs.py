@@ -62,6 +62,8 @@ class Jobs(models.Model):
     # OTHER
     color = fields.Integer(string='Color')
     serial = fields.Char(String="Serial #")
+    aa_id = fields.Many2one(
+        'account.analytic.account', string='Account Analytic')
 
     _sql_constraints = [(
         'name_unique',
@@ -75,6 +77,10 @@ class Jobs(models.Model):
         if vals.get('name', _('New')) == _('New'):
             vals['name'] = self.env['ir.sequence'].next_by_code('ssi_job_sequence') or _('New')
         res = super(Jobs, self).create(vals)
+        name = "AA-"+res.name
+        aa = self.env['account.analytic.account'].sudo().create({'name':name , 'ssi_job_id': res.id})
+        res.write({'aa_id': aa.id})
+        # raise UserError(_(res.id))
         return res
 
     @api.model
@@ -131,7 +137,8 @@ class Jobs(models.Model):
     def ssi_jobs_new_so_button(self):
         action = self.env.ref(
             'ssi_jobs.ssi_jobs_new_so_action').read()[0]
-        action['domain'] = [('ssi_job_id', '=', self.id)]
+        action['domain'] = [('ssi_job_id', '=', self.id), ('analytic_account_id', '=', self.aa_id)]
+        # action['context'] = [('ssi_job_id', '=', self.id), ('aa_id', '=', self.aa_id)]
         return action
 
     @api.multi

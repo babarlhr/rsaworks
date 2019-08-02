@@ -41,6 +41,12 @@
                             <field name="bearing_type"/>
                             <field name="de_bearing"/>
                             <field name="ode_bearing"/>
+
+                            <field name="customer_id_number_general"/>
+                            <field name="customer_id_number_motor_specific"/>
+                            <field name="ui_rated"/>
+                            <field name="ui_rating"/>
+
                           </group>
                           <group>
                             <field name="lube_type"/>
@@ -226,6 +232,48 @@
         <field name="view_mode">tree,form</field>
         <field name="view_type">form</field>
         </record>
+
+
+<!-- maintenance.hr_equipment_request_view_form -->
+        <!-- <record>
+            <xpath expr="//field[@name='production_id']" position="after">
+                <field name="megger_test_motor"/>
+                <field name="check_add_oil"/>
+                <field name="rotate_the_shaft"/>
+                <field name="verify_location"/>
+                <field name="note_problem"/>
+            </xpath>
+        </record> -->
+
+
+        <record id="ssi_hr_equipment_request_view_form" model="ir.ui.view">
+            <field name="name">ssi.hr_equipment_request_view_form_ssi</field>
+            <field name="model">maintenance.request</field>
+            <field name="inherit_id" ref="maintenance.hr_equipment_request_view_form"/>
+            <field eval="20" name="sequence"/>
+            <field name="type">form</field>
+                <field name="arch" type="xml">
+                
+                <xpath expr="//field[@name='description']" position="after">
+                    <notebook>
+                            <page string="Checks">
+                                                    <group>
+
+                                <field name="megger_test_motor"/>
+                                <field name="check_add_oil"/>
+                                <field name="rotate_the_shaft"/>
+                                <field name="verify_location"/>
+                                <field name="note_problem"/>
+                                                        </group>
+
+                            </page>
+                    </notebook>
+
+                </xpath>
+
+                </field>
+            </record>
+
 
     </data>
 </odoo>

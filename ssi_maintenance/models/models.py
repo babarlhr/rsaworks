@@ -30,7 +30,7 @@ class MaintenanceEquipment(models.Model):
     winding_type = fields.Selection(
         [('Form', 'Form'), ('Random', 'Random')], string='Winding Type')
     bearing_type = fields.Selection([('Anti Friction', 'Anit Friction'), (
-        'Sleeve', 'Sleeve'), ('Kingsbury Thrust', 'Kingsbury Thrust')], string='Bearing Type')
+        'Sleeve', 'Sleeve'), ('Kingsbury Thrust', 'Kingsbury Thrust'), ('No Bearing', 'No Bearing'), ('Single Bearing', 'Single Bearing')], string='Bearing Type')
     de_bearing = fields.Char(string='DE Bearing')
     ode_bearing = fields.Char(string='ODE Bearing')
     lube_type = fields.Selection([('Grease', 'Grease'), ('Oil Mist', 'Oil Mist'), ('Force Lube', 'Force Lube'), (
@@ -79,6 +79,12 @@ class MaintenanceEquipment(models.Model):
 
     ssi_jobs_count = fields.Integer(string='Jobs', compute='_get_ssi_jobs_count')
 
+    customer_id_number_general = fields.Char(string='Customer ID# General')
+    customer_id_number_motor_specific = fields.Char(string='Customer ID# General Motor Specific')
+    ui_rated = fields.Selection(
+        [('Yes', 'Yes'), ('No', 'No')], string='UI Rated')
+    ui_rating = fields.Char(string='UI Rating')
+
 
     @api.depends('description')
     def _get_ssi_jobs_count(self):
@@ -112,34 +118,17 @@ class MaintenanceEquipment(models.Model):
 
 
 
-        # action = self.env.ref('stock.action_picking_tree_all').read()[0]
+class MaintenanceRequest(models.Model):
+    _inherit = 'maintenance.request'
 
-        # pickings = self.mapped('picking_ids')
-        # if len(pickings) > 1:
-        #     action['domain'] = [('id', 'in', pickings.ids)]
-        # elif pickings:
-        #     action['views'] = [(self.env.ref('stock.view_picking_form').id, 'form')]
-        #     action['res_id'] = pickings.id
-        # return action
+    megger_test_motor = fields.Selection(
+        [('1', '1'), ('2', '2'), ('3', '3'), ('4', '4')], string='Megger test motor')
+    rotate_the_shaft = fields.Selection(
+        [('Yes', 'Yes'), ('No', 'No')], string='Rotate the shaft')
+    check_add_oil = fields.Selection(
+        [('Yes', 'Yes'), ('No', 'No')], string='Check/Add oil')
+    verify_location = fields.Selection(
+        [('Yes', 'Yes'), ('No', 'No')], string='Verify Location')
+    note_problem = fields.Char(string='Note any problems')
 
 
-        # <record id="action_picking_tree_all" model="ir.actions.act_window">
-        #     <field name="name">Transfers</field>
-        #     <field name="res_model">stock.picking</field>
-        #     <field name="type">ir.actions.act_window</field>
-        #     <field name="view_type">form</field>
-        #     <field name="view_mode">tree,kanban,form,calendar</field>
-        #     <field name="domain"></field>
-        #     <field name="context">{
-        #             'contact_display': 'partner_address',
-        #     }
-        #     </field>
-        #     <field name="search_view_id" ref="view_picking_internal_search"/>
-        #     <field name="help" type="html">
-        #       <p class="o_view_nocontent_smiling_face">
-        #         Define a new transfer
-        #       </p>
-        #     </field>
-        # </record>
-
-        # <menuitem id="all_picking" name="Transfers" parent="menu_stock_warehouse_mgmt" sequence="5" action="action_picking_tree_all" groups="stock.group_stock_manager,stock.group_stock_user"/>

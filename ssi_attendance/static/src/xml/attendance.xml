@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<template xml:space="preserve">
+
+
+<!-- TODO STEP 1 Switch template to this screen : HrAttendanceKioskConfirm -->
+<!-- TODO STEP 2 Checkbox if false create new attendance with user->employee -->
+
+
+
+
+    <t t-name="ssi_attendance.HrAttendanceKioskConfirmCustom">
+        <div class="o_hr_attendance_kiosk_mode_container o_home_menu_background">
+            <span class="o_hr_attendance_kiosk_backdrop"/>
+            <div class="o_hr_attendance_clock text-center"/>
+            <div class="o_hr_attendance_kiosk_mode">
+                <t t-set="checked_in" t-value="widget.employee_state=='checked_in'"/>
+                <div class="o_hr_attendance_back_button">
+                    <span class="btn btn-secondary btn-lg d-block d-md-none"><i class="fa fa-chevron-left mr8"/> Go back</span>
+                    <span class="btn btn-secondary d-none d-md-inline-block"><i class="fa fa-chevron-left" role="img" aria-label="Go back" title="Go back"/></span>
+                </div>
+                <t t-if="widget.employee_id">
+                    <div class="o_hr_attendance_user_badge o_home_menu_background">
+                        <img class="img rounded-circle" t-attf-src="/web/image?model=hr.employee&amp;field=image_medium&amp;id=#{widget.employee_id}" t-att-title="widget.employee_name" t-att-alt="widget.employee_name"/>
+                    </div>
+                    <h1 class="mb8"><t t-esc="widget.employee_name"/></h1>
+                    <h3 class="mt8 mb24"><t t-if="!checked_in">Welcome!</t><t t-else="">Want to check out?</t></h3>
+                    
+                    <!-- CUSTOM -->
+
+
+
+                    <div  t-if="checked_in">
+
+                      <!-- <div class="checkbox">
+                        <label>
+                          <input id="end-job" type="checkbox"/>End job for the day
+                        </label>
+                      </div> -->
+
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="end-job" id="end-job1" value="True" />
+                        <label class="form-check-label" for="end-job1">
+                          Clock Out
+                        </label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="end-job" id="end-job2" value="False" checked="checked" />
+                        <label class="form-check-label" for="end-job2">
+                          Switch Job
+                        </label>
+                      </div>
+
+
+
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label style="fontSize: 8px" for="exampleFormControlSelect1">Jobs</label>
+                            <select id="job-select" class="form-control">
+                                <t t-foreach="widget.jobs" t-as="j">
+                                    <option t-att-value="j.id">
+                                        <t t-esc="j.display_name"></t>
+                                    </option>
+                                </t>                            
+                            </select>
+                          </div>
+                        </div>
+
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label style="fontSize: 8px" for="">Work Orders</label>
+                            <select id="wo-select-js" class="form-control">
+                              <option t-if="!widget.wos" value="">
+                                  Select Job to see Work Orders
+                              </option>
+                              <t  t-if="widget.wos" t-foreach="widget.wos" t-as="wo">
+                                    <option t-att-value="wo.id">
+                                        <t t-esc="wo.display_name"></t>
+                                    </option>
+                                </t>    
+                            </select>
+                          </div>
+                        </div>
+
+                        <!-- <div class="col-md-4">
+                          <div class="form-group">
+                              <label style="fontSize: 8px" for="exampleFormControlSelect1">Labor Codes</label>
+                              <select id="lc-select" class="form-control">
+                                  <t t-foreach="widget.lcs" t-as="lc">
+                                      <option t-att-value="lc.id">
+                                          <t t-esc="lc.display_name"></t>
+                                      </option>
+                                  </t>                            
+                              </select>
+                          </div>
+                        </div> -->
+                      </div>
+                    </div>
+
+
+
+
+                      
+
+                    <t t-if="!widget.use_pin">
+                        <a class="fa fa-7x o_hr_attendance_sign_in_out_icon fa-sign-out btn-warning" t-if="checked_in" aria-label="Sign out" title="Sign out"/>
+                        <a class="fa fa-7x o_hr_attendance_sign_in_out_icon fa-sign-in btn-secondary" t-if="!checked_in" aria-label="Sign in" title="Sign in"/>
+                        <h3 class="mt0 mb0 text-muted">Click to <b t-if="checked_in">check out</b><b t-else="">check in</b></h3>
+                    </t>
+                    <t t-else="">
+                        <h3 class="mt0 mb0 text-muted">Please enter your PIN to <b t-if="checked_in">check out</b><b t-else="">check in</b></h3>
+                        <div class="row">
+                            <div class="col-md-8 offset-md-2 o_hr_attendance_pin_pad">
+                                <div class="row" >
+                                    <div class="col-12 mb8 mt8"><input class="o_hr_attendance_PINbox text-center" type="password" disabled="true"/></div>
+                                </div>
+                                <div class="row">
+                                    <t t-foreach="['1', '2', '3', '4', '5', '6', '7', '8', '9', ['C', 'btn-warning'], '0', ['ok', 'btn-primary']]" t-as="btn_name">
+                                        <div class="col-4 mb4">
+                                            <a t-attf-class="btn {{btn_name[1]? btn_name[1] : 'btn-secondary'}} btn-block btn-lg {{ 'o_hr_attendance_pin_pad_button_' + btn_name[0] }}"><t t-esc="btn_name[0]"/></a>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+                <div t-else="" class="alert alert-danger" role="alert">
+                    <b>Error: could not find corresponding employee.</b><br/>Pleases return to the main menu.
+                </div>
+                <a role="button" class="oe_attendance_sign_in_out" aria-label="Sign out" title="Sign out"/>
+            </div>
+        </div>
+    </t>
+
+
+
+
+    <t t-name="ssi_attendance.HrAttendanceGreetingMessageCustom">
+        <div class="o_hr_attendance_kiosk_mode_container o_home_menu_background">
+            <span class="o_hr_attendance_kiosk_backdrop"/>
+            <div class="o_hr_attendance_clock text-center"/>
+            <div class="o_hr_attendance_kiosk_mode">
+                <t t-if="widget.attendance">
+                    <div class="o_hr_attendance_user_badge o_home_menu_background">
+                        <img class="img rounded-circle" t-attf-src="/web/image?model=hr.employee&amp;field=image_medium&amp;id=#{widget.attendance.employee_id[0]}" t-att-title="widget.employee_name" t-att-alt="widget.employee_name"/>
+                    </div>
+                    <t t-if="widget.attendance.check_out">
+                        <h1 class="mb0">Goodbye <t t-esc="widget.employee_name"/>!</h1>
+                        <h2 class="o_hr_attendance_message_message mt4 mb24"/>
+                        
+                        
+                        <div class="alert alert-info h2 mt0" role="status">
+                            Checked out at <b><t t-esc="widget.attendance.check_out_time"/></b>
+                        </div>
+                        <h3 class="o_hr_attendance_random_message mb24"/>
+                        <div class="o_hr_attendance_warning_message mt24 alert alert-warning" style="display:none" role="alert"/>
+                    </t>
+                    <t t-else="">
+                        <h1 class="mb0">Welcome <t t-esc="widget.employee_name"/>!</h1>
+                        <h2 class="o_hr_attendance_message_message mt4 mb24"/>
+                        <div class="alert alert-info h2 mt0" role="status">
+                            Checked in at <b><t t-esc="widget.attendance.check_in_time"/></b>
+                        </div>
+                        <h3 class="o_hr_attendance_random_message mb24"/>
+                        <div class="o_hr_attendance_warning_message mt24 alert alert-warning" style="display:none" role="alert"/>
+                    </t>
+                    <button class="o_hr_attendance_button_dismiss btn btn-primary btn-lg">
+                        <span class="text-capitalize" t-if="widget.attendance.check_out">Goodbye</span>
+                        <span class="text-capitalize" t-else="">OK</span>
+                    </button>
+
+                    <button class="o_hr_attendance_button_switch_task btn btn-primary btn-lg" t-if="widget.attendance.check_out">
+                        Switch Task
+                    </button>
+
+                </t>
+                <t t-else="">
+                    <div class="alert alert-warning" role="alert">Invalid request, please return to the main menu.</div>
+                    <button class="o_hr_attendance_button_dismiss btn btn-secondary btn-lg">Go back</button>
+                </t>
+            </div>
+        </div>
+    </t>
+</template>
+
+
+    
+

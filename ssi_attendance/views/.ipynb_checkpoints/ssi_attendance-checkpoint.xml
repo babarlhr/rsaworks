@@ -13,8 +13,6 @@
 				  <tree string="lines" create="true" edit="true">
 					<field name="check_in"/>
 					<field name="check_out"/>
-					<field name="job_id"/>
-					<field name="workorder_id"/>
 					<field name="worked_hours"/>
 					<field name="status"/>
 				  </tree>
