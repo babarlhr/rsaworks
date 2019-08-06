@@ -1,2 +1,2 @@
 ach
-stdnum
+python-stdnum
