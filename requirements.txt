@@ -1,2 +1,2 @@
-ach
+ach==0.2
 python-stdnum
