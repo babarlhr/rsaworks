@@ -5,7 +5,6 @@
 
 <odoo>
     <data>
-
         <record id="ssi_leads_first_form" model="ir.ui.view">
             <field name="name">ssi.ssi_leads_first_form</field>
             <field name="model">crm.lead</field>
@@ -101,7 +100,6 @@
                                 <field name="o_closing_approach_used"/>
                                 <field name="o_confirmed_the_sale"/>
                             </group>
-
                         </page>
                     <!-- </notebook> -->
                 </xpath>

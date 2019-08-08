@@ -1,0 +1,611 @@
+<?xml version="1.0"?>
+
+<odoo>
+
+<record id="jobs_form" model="ir.ui.view">
+    <field name="name">jobs.form</field>
+    <field name="model">ssi_jobs</field>
+    <field name="arch" type="xml">
+        <form string="Jobs">
+            <header>
+                <button name="ssi_jobs_new_mrp_prod_button" type="object" class="oe_stat_button" icon="fa-wrench" string="Start Job"/>
+                <button name="ssi_jobs_new_so_button" type="object" class="oe_stat_button" icon="fa-dollar" string="Create Estimate" context="{'default_partner_id': partner_id, 'default_ssi_jobs': active_id,'default_analytic_account_id': aa_id}"/>
+                <button name="ssi_jobs_new_po_button" type="object" class="oe_stat_button" icon="fa-credit-card" string="Order Parts" context="{'default_ssi_jobs': active_id}"/>
+                <field name="stage_id" options="{'clickable': '1'}" widget="statusbar"/>
+            </header>
+            <sheet string="Jobs">
+                <div class="oe_button_box" name="button_box">
+                    <button class="oe_stat_button" icon="fa-dollar" type="object" name="action_view_estimates">
+                    <field name="order_total" string="Estimate" widget="statinfo"/>
+                    </button>
+                    <button class="oe_stat_button" icon="fa-credit-card" type="object" name="action_view_po_count">
+                    <field name="po_count" string="Purchase Orders" placeholder="Purchase Orders" widget="statinfo"/>
+                    </button>
+                    <button class="oe_stat_button" icon="fa-file-o" type="object" name="action_view_ai_count">
+                    <field name="ai_count" string="Vendor Bills" widget="statinfo"/>
+                    </button>
+
+                    <button class="oe_stat_button" icon="fa-wrench" type="object" name="action_view_prod_count">
+                    <field name="prod_count" string="Operations" widget="statinfo"/>
+                    </button>
+
+                    <button class="oe_stat_button" icon="fa-file-o" type="object" name="action_view_wo_count">
+                    <field name="wo_count" string="Work Orders" widget="statinfo"/>
+                    </button>
+                    <button class="oe_stat_button" icon="fa-file-o" type="object" name="action_view_wc_count">
+                    <field name="wc_count" string="Timesheets" widget="statinfo"/>
+                    </button>
+
+                    <button name="toggle_active" type="object"
+                        class="oe_stat_button" icon="fa-archive">
+                        <field name="active" widget="boolean_button"
+                            options='{"terminology": "archive"}'/>
+                    </button>
+                </div>
+                <group name="main">
+                    <group name="left">
+                        <field name="name" readonly="1"/>
+                        <field name="partner_id"/>
+                        <!-- <field name="objects"/> -->
+                        <!-- <field name="size"/>
+                        <field name="sizeUM"/>
+                        <field name="shaft"/>
+                        <field name="dimensions"/> -->
+                        <field name="equipment_id"/>
+                        <field name="ready_for_pickup"/>
+                    </group>
+                    <group name="right">
+                        <field name="urgency"/>
+                        <field name="po_number"/>
+                        <!-- <field name="weight"/>
+                        <field name="weightUM"/> -->
+                        <field name="notes"/>
+                        <field name="status"/>
+                        <field name="aa_id"/>
+                    </group>
+                </group>
+            <notebook>
+                <page name="equipment" string="Equipment"/>
+                <page name="info" string="Creation Info"/>
+            </notebook>
+          </sheet>
+            <div class="oe_chatter">
+                <field name="message_follower_ids" widget="mail_followers"/>
+                <field name="message_ids" widget="mail_thread"/>
+            </div>
+        </form>
+    </field>
+</record>
+
+
+  <record model="ir.ui.view" id="jobs_kanban">
+    <field name="name">jobs.kanban</field>
+    <field name="model">ssi_jobs</field>
+    <field name="type">kanban</field>
+    <field name="arch" type="xml">
+        <kanban default_group_by="stage_id">
+            <field name="status"/>
+            <field name="order_total"/>
+            <progressbar field="status" colors="{&quot;done&quot;: &quot;success&quot;, &quot;process&quot;: &quot;warning&quot;, &quot;blocked&quot;: &quot;danger&quot;}" help="This bar allows to filter the jobs based on status."/>
+            <field name="stage_id"/>
+            <field name="color"/>
+            <templates>
+
+                <t t-name="kanban-box">
+
+                    <div color="color" t-attf-class="oe_kanban_card oe_kanban_global_click">
+                        
+                        <div class="o_dropdown_kanban dropdown" name="kanban_dropdown">
+                            <a class="dropdown-toggle o-no-caret btn" data-toggle="dropdown" href="#">
+                            <span class="fa fa-bars fa-lg"/>
+                            </a>
+                            <div class="dropdown-menu" role="menu" name="ssi_div_e9f40d">
+                            <t t-if="widget.editable">
+                                <a type="edit" class="dropdown-item">Edit</a>
+                            </t>
+                            <t t-if="widget.deletable">
+                                <a type="delete" class="dropdown-item">Delete</a>
+                            </t>
+                            <ul class="oe_kanban_colorpicker" data-field="color"/>
+                            </div>
+                        </div>
+                        <div class="oe_kanban_bottom_left" name="studio_div_d9f9e7">
+                            <field name="urgency" widget="priority" default_value="straight"/>
+                        </div>
+                        <div class="oe_kanban_bottom_right" name="ssi_div_d9f9e8"></div>
+
+                        <div class="o_kanban_card_content">
+                            <field bold="True" name="name" modifiers="{}"/>
+                            <field name="partner_id" display="full"/>
+                            <!-- <field name="size"/>
+                            <field name="sizeUM"/> -->
+                            <field name="serial" display="full"/>
+
+                        </div>
+                    </div>
+                </t>
+            </templates>
+        </kanban>
+    </field>
+</record>
+
+  <!-- DASHBOARD -->
+  <!-- <record id="studio_customization.default_dashboard_vi_421f42a4-00e6-43d6-b7b5-a5534530281c" model="ir.ui.view" context="{'studio': True}">
+    <field name="active" eval="True"/>
+    <field name="arch" type="xml">
+      <dashboard>
+        <view type="graph"/>
+        <view type="pivot"/>
+      </dashboard>
+    </field>
+    <field name="field_parent" eval="False"/>
+    <field name="groups_id" eval="[(6, 0, [])]"/>
+    <field name="inherit_id" eval="False"/>
+    <field name="key" eval="False"/>
+    <field name="mode">primary</field>
+    <field name="model">x_jobs</field>
+    <field name="name">Default dashboard view for x_jobs</field>
+    <field name="priority">16</field>
+    <field name="type">dashboard</field>
+  </record> -->
+
+<!-- PIVOT -->
+  <record id="jobs_pivot" model="ir.ui.view">
+    <field name="active" eval="True"/>
+    <field name="arch" type="xml">
+      <pivot display_quantity="true" string="Jobs"/>
+    </field>
+    <field name="field_parent" eval="False"/>
+    <field name="groups_id" eval="[(6, 0, [])]"/>
+    <field name="inherit_id" eval="False"/>
+    <field name="key" eval="False"/>
+    <field name="mode">primary</field>
+    <field name="model">ssi_jobs</field>
+    <field name="name">Default pivot view for ssi_jobs</field>
+    <field name="priority">16</field>
+    <field name="type">pivot</field>
+  </record>
+
+
+<record id="jobs_stage_tree" model="ir.ui.view">
+    <field name="name">jobs.tree</field>
+    <field name="model">ssi_jobs_stage</field>
+    <field name="arch" type="xml">
+        <tree string="Jobs">
+            <field name="name"/>
+        </tree>
+    </field>
+</record>
+<record id="jobs_tree" model="ir.ui.view">
+    <field name="name">jobs.tree</field>
+    <field name="model">ssi_jobs</field>
+    <field name="arch" type="xml">
+        <tree string="Jobs">
+            <field name="name"/>
+            <field name="partner_id"/>
+            <!-- <field name="objects"/> -->
+            <!-- <field name="size"/>
+            <field name="sizeUM"/> -->
+            <field name="stage_id"/>
+        </tree>
+    </field>
+</record>
+
+<record id="jobs_search" model="ir.ui.view">
+    <field name="name">jobs.search</field>
+    <field name="model">ssi_jobs</field>
+    <field name="arch" type="xml">
+        <search string="Search Jobs">
+            <field name="name" filter_domain="['|', ('name', 'ilike', self), ('code', 'ilike', self)]" string="Name or Number"/>
+            <field name="partner_id"/>
+            <separator/>
+            <filter name="inactive" string="Archived" domain="[('active', '=', False)]"/>
+            <group name="groupby">
+                <filter name="partner_groupby" string="Partner"
+                    context="{'group_by': 'partner_id'}"/>
+            </group>
+        </search>
+    </field>
+</record>
+
+
+<!-- FOR DASHBOARD TO WORK DONT FORGET TO INSTALL DASHBOARD MODULE -->
+<record id="jobs_action" model="ir.actions.act_window">
+    <field name="name">Jobs</field>
+    <field name="res_model">ssi_jobs</field>
+    <field name="view_mode">kanban,tree,dashboard,pivot,form</field>
+</record>
+<record id="jobs_stage_action" model="ir.actions.act_window">
+    <field name="name">Job Stages</field>
+    <field name="res_model">ssi_jobs_stage</field>
+    <field name="view_mode">tree,form</field>
+</record>
+
+
+<!-- LOOK INTO SECURITY ISSUES -->
+<menuitem id="jobs_menu" action="jobs_action"
+   sequence="100" name="jobs_menu"/>
+<menuitem id="jobs_stage_menu" action="jobs_stage_action" parent="jobs_menu"
+   sequence="100" name="Job Stages"/>
+
+
+
+<!-- JOB RELATED FIELDS TREES AND FORMS -->
+<record id="ssi_estimate_tree" model="ir.ui.view">
+    <field name="name">ssi_estimate.tree</field>
+    <field name="model">sale.order</field>
+    <field name="arch" type="xml">
+        <tree string="Jobs">
+            <field name="name"/>
+            <field class="hidden" name="state"/>
+            <field name="confirmation_date"/>
+            <field name="commitment_date"/>
+            <field name="expected_date"/>
+            <field name="partner_id"/>
+            <field name="user_id"/>
+            <field name="amount_total"/>
+            <field name="invoice_status"/>
+        </tree>
+    </field>
+</record>
+
+
+<record id="sale_order_estimate_line_action" model="ir.actions.act_window">
+  <field name="auto_search" eval="True"/>
+  <field name="binding_model_id" eval="False"/>
+  <field name="binding_type">action</field>
+  <field name="context">{'search_default_ssi_job_id': active_id,'default_ssi_job_id': active_id}</field>
+  <field name="domain">[('ssi_job_id', '=', active_id)]</field>
+  <field name="filter" eval="False"/>
+  <field name="groups_id" eval="[(6, 0, [])]"/>
+  <field name="help" eval="False"/>
+  <field name="limit">80</field>
+  <field name="multi" eval="False"/>
+  <field name="name">Estimates</field>
+  <field name="res_model">sale.order</field>
+  <field name="search_view_id" eval="False"/>
+  <field name="src_model" eval="False"/>
+  <field name="target">current</field>
+  <field name="type">ir.actions.act_window</field>
+  <field name="usage" eval="False"/>
+  <field name="view_id" ref="ssi_estimate_tree"/>
+  <field name="view_mode">tree,form</field>
+  <field name="view_type">form</field>
+</record>
+
+<record id="ssi_po_tree" model="ir.ui.view">
+    <field name="name">ssi_po.tree</field>
+    <field name="model">purchase.order</field>
+    <field name="arch" type="xml">
+        <tree string="Jobs">
+            <field name="name"/>
+            <field name="ssi_job_id"/>
+            <field name="date_order"/>
+            <field name="partner_id"/>
+            <!-- <field name="date_planned"/> -->
+            <field name="user_id"/>
+            <field name="origin"/>
+            <field name="amount_untaxed"/>
+            <field name="amount_total"/>
+            <field name="state"/>
+        </tree>
+    </field>
+</record>
+
+
+<record id="sale_order_po_line_action" model="ir.actions.act_window">
+  <field name="auto_search" eval="True"/>
+  <field name="binding_model_id" eval="False"/>
+  <field name="binding_type">action</field>
+  <field name="context">{'search_default_ssi_job_id': active_id,'default_ssi_job_id': active_id}</field>
+  <field name="domain">[('ssi_job_id', '=', active_id)]</field>
+  <field name="filter" eval="False"/>
+  <field name="groups_id" eval="[(6, 0, [])]"/>
+  <field name="help" eval="False"/>
+  <field name="limit">80</field>
+  <field name="multi" eval="False"/>
+  <field name="name">Purchase Orders</field>
+  <field name="res_model">purchase.order</field>
+  <field name="search_view_id" eval="False"/>
+  <field name="src_model" eval="False"/>
+  <field name="target">current</field>
+  <field name="type">ir.actions.act_window</field>
+  <field name="usage" eval="False"/>
+  <field name="view_id" ref="ssi_po_tree"/>
+  <field name="view_mode">tree,form</field>
+  <field name="view_type">form</field>
+</record>
+
+
+<record id="ssi_ai_tree" model="ir.ui.view">
+    <field name="name">ssi_ai.tree</field>
+    <field name="model">account.invoice</field>
+    <field name="arch" type="xml">
+        <tree string="Jobs">
+            <field name="vendor_display_name"/>
+            <field name="date_invoice"/>
+            <field name="number"/>
+            <field name="reference"/>
+            <field name="date_due"/>
+            <field name="origin"/>
+            <field name="amount_untaxed"/>
+            <field name="amount_tax"/>
+            <field name="amount_total_signed"/>
+            <field name="residual_signed"/>
+            <field name="state"/>
+        </tree>
+    </field>
+</record>
+
+
+<record id="sale_order_ai_line_action" model="ir.actions.act_window">
+  <field name="auto_search" eval="True"/>
+  <field name="binding_model_id" eval="False"/>
+  <field name="binding_type">action</field>
+  <field name="context">{'search_default_ssi_job_id': active_id,'default_ssi_job_id': active_id}</field>
+  <field name="domain">[('ssi_job_id', '=', active_id)]</field>
+  <field name="filter" eval="False"/>
+  <field name="groups_id" eval="[(6, 0, [])]"/>
+  <field name="help" eval="False"/>
+  <field name="limit">80</field>
+  <field name="multi" eval="False"/>
+  <field name="name">Vendor Bills</field>
+  <field name="res_model">account.invoice</field>
+  <field name="search_view_id" eval="False"/>
+  <field name="src_model" eval="False"/>
+  <field name="target">current</field>
+  <field name="type">ir.actions.act_window</field>
+  <field name="usage" eval="False"/>
+  <field name="view_id" ref="ssi_ai_tree"/>
+  <field name="view_mode">tree,form</field>
+  <field name="view_type">form</field>
+</record>
+
+<record id="ssi_prod_tree" model="ir.ui.view">
+    <field name="name">ssi_prod.tree</field>
+    <field name="model">mrp.production</field>
+    <field name="arch" type="xml">
+        <tree string="Jobs">
+            <field name="ssi_job_id"/>
+            <field name="name"/>
+            <!-- <field name="partner_id"/> -->
+            <field name="date_planned_start"/>
+            <field name="product_id"/>
+            <field name="origin"/>
+            <field name="product_qty"/>
+            <field name="product_uom_id"/>
+            <field name="availability"/>
+            <field name="routing_id"/>
+            <field name="state"/>
+        </tree>
+    </field>
+</record>
+
+
+<record id="sale_order_prod_line_action" model="ir.actions.act_window">
+  <field name="auto_search" eval="True"/>
+  <field name="binding_model_id" eval="False"/>
+  <field name="binding_type">action</field>
+  <field name="context">{'search_default_ssi_job_id': active_id,'default_ssi_job_id': active_id}</field>
+  <field name="domain">[('ssi_job_id', '=', active_id)]</field>
+  <field name="filter" eval="False"/>
+  <field name="groups_id" eval="[(6, 0, [])]"/>
+  <field name="help" eval="False"/>
+  <field name="limit">80</field>
+  <field name="multi" eval="False"/>
+  <field name="name">Operations</field>
+  <field name="res_model">mrp.production</field>
+  <field name="search_view_id" eval="False"/>
+  <field name="src_model" eval="False"/>
+  <field name="target">current</field>
+  <field name="type">ir.actions.act_window</field>
+  <field name="usage" eval="False"/>
+  <field name="view_id" ref="ssi_prod_tree"/>
+  <field name="view_mode">tree,form</field>
+  <field name="view_type">form</field>
+</record>
+
+
+
+<record id="ssi_aa_tree" model="ir.ui.view">
+    <field name="name">ssi_aa.tree</field>
+    <field name="model">account.analytic.account</field>
+    <field name="arch" type="xml">
+        <tree string="Jobs">
+            <field name="ssi_job_id"/>
+            <field name="name"/>
+            <!-- <field name="partner_id"/> -->
+            <!-- <field name="date_planned_start"/>
+            <field name="product_id"/>
+            <field name="origin"/>
+            <field name="product_qty"/>
+            <field name="product_uom_id"/>
+            <field name="availability"/>
+            <field name="routing_id"/>
+            <field name="state"/> -->
+        </tree>
+    </field>
+</record>
+
+
+<record id="sale_order_aa_line_action" model="ir.actions.act_window">
+  <field name="auto_search" eval="True"/>
+  <field name="binding_model_id" eval="False"/>
+  <field name="binding_type">action</field>
+  <field name="context">{'search_default_ssi_job_id': active_id,'default_ssi_job_id': active_id}</field>
+  <field name="domain">[('ssi_job_id', '=', active_id)]</field>
+  <field name="filter" eval="False"/>
+  <field name="groups_id" eval="[(6, 0, [])]"/>
+  <field name="help" eval="False"/>
+  <field name="limit">80</field>
+  <field name="multi" eval="False"/>
+  <field name="name">Analytics</field>
+  <field name="res_model">account.analytic.account</field>
+  <field name="search_view_id" eval="False"/>
+  <field name="src_model" eval="False"/>
+  <field name="target">current</field>
+  <field name="type">ir.actions.act_window</field>
+  <field name="usage" eval="False"/>
+  <field name="view_id" ref="ssi_prod_tree"/>
+  <field name="view_mode">tree,form</field>
+  <field name="view_type">form</field>
+</record>
+
+
+
+<record id="ssi_wo_tree" model="ir.ui.view">
+    <field name="name">ssi_wo.tree</field>
+    <field name="model">mrp.workorder</field>
+    <field name="arch" type="xml">
+        <tree string="Jobs">
+            <field name="ssi_job_id"/>
+            <field name="name"/>
+            <field name="date_planned_start"/>
+            <field name="date_planned_finished"/>
+            <field name="workcenter_id"/>
+            <field name="production_id"/>
+            <field name="duration_expected"/>
+            <field name="duration"/>
+            <field name="product_id"/>
+            <field name="state"/>
+        </tree>
+    </field>
+</record>
+
+
+<record id="sale_order_wo_line_action" model="ir.actions.act_window">
+  <field name="auto_search" eval="True"/>
+  <field name="binding_model_id" eval="False"/>
+  <field name="binding_type">action</field>
+  <field name="context">{'search_default_ssi_job_id': active_id,'default_ssi_job_id': active_id}</field>
+  <field name="domain">[('ssi_job_id', '=', active_id)]</field>
+  <field name="filter" eval="False"/>
+  <field name="groups_id" eval="[(6, 0, [])]"/>
+  <field name="help" eval="False"/>
+  <field name="limit">80</field>
+  <field name="multi" eval="False"/>
+  <field name="name">Vendor Bills</field>
+  <field name="res_model">mrp.workorder</field>
+  <field name="search_view_id" eval="False"/>
+  <field name="src_model" eval="False"/>
+  <field name="target">current</field>
+  <field name="type">ir.actions.act_window</field>
+  <field name="usage" eval="False"/>
+  <field name="view_id" ref="ssi_wo_tree"/>
+  <field name="view_mode">tree,form</field>
+  <field name="view_type">form</field>
+</record>
+
+<record id="ssi_wc_tree" model="ir.ui.view">
+    <field name="name">ssi_wc.tree</field>
+    <field name="model">mrp.workcenter.productivity</field>
+    <field name="arch" type="xml">
+        <tree string="Jobs">
+            <field name="date_start"/>
+            <field name="date_end"/>
+            <field name="workcenter_id"/>
+            <field name="user_id"/>
+            <field name="loss_id"/>
+            <field name="duration"/>
+        </tree>
+    </field>
+</record>
+
+<record id="sale_order_wc_line_action" model="ir.actions.act_window">
+  <field name="auto_search" eval="True"/>
+  <field name="binding_model_id" eval="False"/>
+  <field name="binding_type">action</field>
+  <field name="context">{'search_default_ssi_job_id': active_id,'default_ssi_job_id': active_id}</field>
+  <field name="domain">[('ssi_job_id', '=', active_id)]</field>
+  <field name="filter" eval="False"/>
+  <field name="groups_id" eval="[(6, 0, [])]"/>
+  <field name="help" eval="False"/>
+  <field name="limit">80</field>
+  <field name="multi" eval="False"/>
+  <field name="name">Vendor Bills</field>
+  <field name="res_model">mrp.workcenter.productivity</field>
+  <field name="search_view_id" eval="False"/>
+  <field name="src_model" eval="False"/>
+  <field name="target">current</field>
+  <field name="type">ir.actions.act_window</field>
+  <field name="usage" eval="False"/>
+  <field name="view_id" ref="ssi_wc_tree"/>
+  <field name="view_mode">tree,form</field>
+  <field name="view_type">form</field>
+</record>
+
+<!-- HEADER BUTTONS -->
+<record id="ssi_jobs_new_so_action" model="ir.actions.act_window">
+    <field name="auto_search" eval="True"/>
+    <field name="binding_model_id" eval="False"/>
+    <field name="binding_type">action</field>
+    <field name="filter" eval="False"/>
+    <field name="groups_id" eval="[(6, 0, [])]"/>
+    <field name="help" eval="False"/>
+    <field name="multi" eval="False"/>
+    <field name="name">Estimates</field>
+    <field name="res_model">sale.order</field>
+    <field name="search_view_id" eval="False"/>
+    <field name="src_model" eval="False"/>
+    <field name="target">current</field>
+    <field name="type">ir.actions.act_window</field>
+    <field name="usage" eval="False"/>
+    <field name="view_id" eval="False"/>
+    <field name="view_mode">form,tree</field>
+    <field name="view_type">form</field>
+</record>
+
+<record id="ssi_jobs_new_prod_action" model="ir.actions.act_window">
+    <field name="auto_search" eval="True"/>
+    <field name="binding_model_id" eval="False"/>
+    <field name="binding_type">action</field>
+  <field name="context">{'search_default_ssi_job_id': active_id,'default_ssi_job_id': active_id}</field>
+  <field name="domain">[('ssi_job_id', '=', active_id)]</field>
+    <field name="filter" eval="False"/>
+    <field name="groups_id" eval="[(6, 0, [])]"/>
+    <field name="help" eval="False"/>
+    <field name="multi" eval="False"/>
+    <field name="name">Estimates</field>
+    <field name="res_model">mrp.production</field>
+    <field name="search_view_id" eval="False"/>
+    <field name="src_model" eval="False"/>
+    <field name="target">current</field>
+    <field name="type">ir.actions.act_window</field>
+    <field name="usage" eval="False"/>
+    <field name="view_id" eval="False"/>
+    <field name="view_mode">form,tree</field>
+    <field name="view_type">form</field>
+</record>
+
+<record id="ssi_jobs_new_po_action" model="ir.actions.act_window">
+    <field name="auto_search" eval="True"/>
+    <field name="binding_model_id" eval="False"/>
+    <field name="binding_type">action</field>
+  <field name="context">{'search_default_ssi_job_id': active_id,'default_ssi_job_id': active_id}</field>
+  <field name="domain">[('ssi_job_id', '=', active_id)]</field>
+    <field name="filter" eval="False"/>
+    <field name="groups_id" eval="[(6, 0, [])]"/>
+    <field name="help" eval="False"/>
+    <field name="multi" eval="False"/>
+    <field name="name">Estimates</field>
+    <field name="res_model">purchase.order</field>
+    <field name="search_view_id" eval="False"/>
+    <field name="src_model" eval="False"/>
+    <field name="target">current</field>
+    <field name="type">ir.actions.act_window</field>
+    <field name="usage" eval="False"/>
+    <field name="view_id" eval="False"/>
+    <field name="view_mode">form,tree</field>
+    <field name="view_type">form</field>
+</record>
+
+<!-- CREATE SEQUENCE -->
+<record id="ssi_job_sequence" model="ir.sequence">
+    <field name="name">SSI Job Sequence</field>
+    <field name="code">ssi_job_sequence</field>
+    <field name="prefix">JOB</field>
+    <field name="padding">3</field>
+    <field name="company_id" eval="False"/>
+</record>
+
+</odoo>

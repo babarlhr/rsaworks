@@ -8,6 +8,7 @@ class HrAttendance(models.Model):
     status = fields.Selection(string="Status", selection=[(
         'open', 'Open'), ('approved', 'Approved')], default='open', track_visibility='onchange')
     attendance_lines = fields.One2many('hr.attendance.line', 'attendance_id', string='Attendance Lines', copy=True)
+<<<<<<< HEAD
     
     @api.one
     def approve_attendance(self):
@@ -26,6 +27,26 @@ class HrAttendance(models.Model):
             })
             self.env['mrp.workcenter.productivity'].sudo().create(data)
         
+=======
+
+
+    @api.one
+    def approve_attendance(self):
+        data = {
+            'workorder_id': self.workorder_id.id,
+            'workcenter_id': self.workorder_id.workcenter_id.id,
+            'loss_id': 7,
+            'user_id': self.employee_id.user_id.id,
+            'date_start': self.check_in,
+            'date_end': self.check_out,
+            # 'x_studio_labor_codes': self.labor_code_id.id
+        }
+        self.write({
+            'status': 'approved'
+        })
+        self.env['mrp.workcenter.productivity'].sudo().create(data)
+
+>>>>>>> sm_16645_payment_term
 class HrAttendanceLine(models.Model):
     _name = "hr.attendance.line"
     _description = "Attendance  Detail"
@@ -47,3 +68,7 @@ class HrAttendanceLine(models.Model):
        'mrp.workorder', ondelete='set null', string="Work Order", index=True)
 #    labor_code_id = fields.Many2one(
 #        'x_labor.codes', ondelete='set null', string="Labor Code", index=True)
+<<<<<<< HEAD
+=======
+
+>>>>>>> sm_16645_payment_term
