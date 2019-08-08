@@ -26,7 +26,7 @@ class AccountPayment(models.Model):
 
     @api.onchange('amount', 'payment_difference', 'payment_date')
     def onchange_payment_amount(self):
-        import pdb;pdb.set_trace()
+                
         if self.invoice_id \
                 and self.invoice_id.payment_term_id \
                 and self.invoice_id.payment_term_id.is_discount \
