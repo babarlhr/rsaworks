@@ -41,11 +41,11 @@ class Contact(models.Model):
     a_employees = fields.Integer(string='Employees')
     a_website = fields.Char(string='Website')
     a_industry = fields.Char(string='Industry')
-    a_description = fields.Char(string='Description')
+    a_description = fields.Text(string='Description')
     a_linkedin_company = fields.Char(string='LinkedIn Company')
     a_products_they_sell = fields.Char(string='Products They Sell')
-    a_markets_they_serve = fields.Char(string='Markets They Serve')
-    a_our_competition = fields.Char(string='Our Competition')
+    a_markets_they_serve = fields.Text(string='Markets They Serve')
+    a_our_competition = fields.Text(string='Our Competition')
 
     # 2 CUSTOMERS
     a_company_goals = fields.Char(string='Company Goals')

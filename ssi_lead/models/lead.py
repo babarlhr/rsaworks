@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models, tools, _
 
+# FIX TEXT FIELD
+
 class Lead(models.Model):
     _inherit = 'crm.lead'
 
@@ -20,12 +22,12 @@ class Lead(models.Model):
     l_website = fields.Char(string='Website')
     l_buyer_role = fields.Selection(
         [('User', 'User'), ('Technical/System', 'Technical/System'), ('Economic/Strategic', 'Economic/Strategic')], string='Buyer Role')
-    l_description = fields.Char(string='Description')
+    l_description = fields.Text(string='Description')
     l_prospect_linkedin = fields.Char(string='Prospect LinkedIn')
     l_linkedin_company = fields.Char(string='LinkedIn Company')
     l_products_they_sell = fields.Char(string='Products They Sell')
-    l_markets_they_serve = fields.Char(string='Markets They Serve')
-    l_competitors = fields.Char(string='Competitors')
+    l_markets_they_serve = fields.Text(string='Markets They Serve')
+    l_competitors = fields.Text(string='Competitors')
 
     # 3 LEAD - COACHES AND PERSONALITIES
     l_this_prospect_will_be_our_coach = fields.Boolean(help="80 percent chance of making the sale when you have a coach vs. 20 percent when you don’t", string='This Prospect Will Be Our coach')
