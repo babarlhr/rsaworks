@@ -9,10 +9,9 @@
         <form string="Jobs">
             <header>
                 <button name="ssi_jobs_new_mrp_prod_button" type="object" class="oe_stat_button" icon="fa-wrench" string="Start Job"/>
-                <button name="ssi_jobs_new_so_button" type="object" class="oe_stat_button" icon="fa-dollar" string="Create Estimate" context="{'default_partner_id': partner_id, 'default_ssi_jobs': active_id}"/>
+                <button name="ssi_jobs_new_so_button" type="object" class="oe_stat_button" icon="fa-dollar" string="Create Estimate" context="{'default_partner_id': partner_id, 'default_ssi_jobs': active_id,'default_analytic_account_id': aa_id}"/>
                 <button name="ssi_jobs_new_po_button" type="object" class="oe_stat_button" icon="fa-credit-card" string="Order Parts" context="{'default_ssi_jobs': active_id}"/>
                 <field name="stage_id" options="{'clickable': '1'}" widget="statusbar"/>
-
             </header>
             <sheet string="Jobs">
                 <div class="oe_button_box" name="button_box">
@@ -62,6 +61,7 @@
                         <field name="weightUM"/> -->
                         <field name="notes"/>
                         <field name="status"/>
+                        <field name="aa_id"/>
                     </group>
                 </group>
             <notebook>
@@ -86,7 +86,7 @@
         <kanban default_group_by="stage_id">
             <field name="status"/>
             <field name="order_total"/>
-            <progressbar field="status" colors="{&quot;done&quot;: &quot;success&quot;, &quot;process&quot;: &quot;warning&quot;, &quot;blocked&quot;: &quot;danger&quot;}" sum_field="x_studio_order_total" help="This bar allows to filter the jobs based on status."/>
+            <progressbar field="status" colors="{&quot;done&quot;: &quot;success&quot;, &quot;process&quot;: &quot;warning&quot;, &quot;blocked&quot;: &quot;danger&quot;}" help="This bar allows to filter the jobs based on status."/>
             <field name="stage_id"/>
             <field name="color"/>
             <templates>
@@ -405,6 +405,54 @@
   <field name="view_type">form</field>
 </record>
 
+
+
+<record id="ssi_aa_tree" model="ir.ui.view">
+    <field name="name">ssi_aa.tree</field>
+    <field name="model">account.analytic.account</field>
+    <field name="arch" type="xml">
+        <tree string="Jobs">
+            <field name="ssi_job_id"/>
+            <field name="name"/>
+            <!-- <field name="partner_id"/> -->
+            <!-- <field name="date_planned_start"/>
+            <field name="product_id"/>
+            <field name="origin"/>
+            <field name="product_qty"/>
+            <field name="product_uom_id"/>
+            <field name="availability"/>
+            <field name="routing_id"/>
+            <field name="state"/> -->
+        </tree>
+    </field>
+</record>
+
+
+<record id="sale_order_aa_line_action" model="ir.actions.act_window">
+  <field name="auto_search" eval="True"/>
+  <field name="binding_model_id" eval="False"/>
+  <field name="binding_type">action</field>
+  <field name="context">{'search_default_ssi_job_id': active_id,'default_ssi_job_id': active_id}</field>
+  <field name="domain">[('ssi_job_id', '=', active_id)]</field>
+  <field name="filter" eval="False"/>
+  <field name="groups_id" eval="[(6, 0, [])]"/>
+  <field name="help" eval="False"/>
+  <field name="limit">80</field>
+  <field name="multi" eval="False"/>
+  <field name="name">Analytics</field>
+  <field name="res_model">account.analytic.account</field>
+  <field name="search_view_id" eval="False"/>
+  <field name="src_model" eval="False"/>
+  <field name="target">current</field>
+  <field name="type">ir.actions.act_window</field>
+  <field name="usage" eval="False"/>
+  <field name="view_id" ref="ssi_prod_tree"/>
+  <field name="view_mode">tree,form</field>
+  <field name="view_type">form</field>
+</record>
+
+
+
 <record id="ssi_wo_tree" model="ir.ui.view">
     <field name="name">ssi_wo.tree</field>
     <field name="model">mrp.workorder</field>
@@ -491,8 +539,6 @@
     <field name="auto_search" eval="True"/>
     <field name="binding_model_id" eval="False"/>
     <field name="binding_type">action</field>
-  <field name="context">{'search_default_ssi_job_id': active_id,'default_ssi_job_id': active_id, 'search_default_analytic_account_id': active_id.aa_id,'default_analytic_account_id': active_id.aa_id}</field>
-  <field name="domain">[('ssi_job_id', '=', active_id), ('analytic_account_id', '=', active_id.aa_id)]</field>
     <field name="filter" eval="False"/>
     <field name="groups_id" eval="[(6, 0, [])]"/>
     <field name="help" eval="False"/>

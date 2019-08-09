@@ -11,6 +11,7 @@
 				<filter name="Begin" string="Begin Date" date="begin_date"/>
 				<group expand="0" string="Group By">
 					<filter string="Employee" name="groupby_employee" domain="[]" context="{'group_by':'employee_id'}"/>
+					<filter string="Overtime Group" name="groupby_overtime" domain="[]" context="{'group_by':'overtime_group'}"/>
 					<filter string="Begin Date" name="groupby_date" domain="[]" context="{'group_by':'begin_date'}" help="Attendance by Date"/>
 				</group>
 			</search>
@@ -22,10 +23,14 @@
 	  <field name="model">hr.attendance.report</field>
 	  <field name="arch" type="xml">
 		<tree string="Employee Attendance">
-			<field name="employee_id"/>
 			<field name="begin_date"/>
-			<field name="end_date"/>
+			<field name="employee_badge"/>
+			<field name="employee_id"/>
+			<field name="department"/>
+			<field name="shift"/>
 			<field name="hours"/>
+			<field name="straight_time"/>
+			<field name="over_time"/>
 		</tree>
 	  </field>
 	</record>
@@ -45,7 +50,35 @@
 	  </field>
 	</record>
             
-
+	<record model="ir.ui.view" id="attendance_report_form_view">
+	  <field name="name">attendance_report.form</field>
+	  <field name="model">hr.attendance.report</field>
+	  <field name="arch" type="xml">
+		<form string="Attendance">
+            <header>
+                <button name="payroll_export" type="object" class="oe_stat_button" icon="fa-check" string="Payroll Export"/>
+                <!-- field name="status" widget="statusbar" statusbar_visible="open,approved"/ -->
+            </header>
+            <sheet>
+                <group>
+                    <group>
+                        <field name="employee_badge"/>
+                        <field name="employee_id"/>
+                        <field name="department"/>
+                        <field name="shift"/>
+                    </group>
+                    <group>
+                        <field name="begin_date"/>
+                        <field name="hours"/>
+                        <field name="straight_time"/>
+                        <field name="over_time"/>
+                    </group>
+                </group>
+            </sheet>
+        </form>
+	  </field>
+	</record>
+    
 	<record 
 	model="ir.actions.act_window" 
 	id="hr_attendance_report_view">

@@ -23,11 +23,12 @@ class Jobs(models.Model):
     # NECESSARY SUPPORT
     currency_id = fields.Many2one('res.currency', string='Account Currency',
                                   help="Forces all moves for this account to have this account currency.")
-    stage_id = fields.Many2one('ssi_jobs_stage', group_expand='_read_group_stage_ids', default=lambda self: self.env['ssi_jobs_stage'].search([('name', '=', 'New Job')]), string='Stage')
+    stage_id = fields.Many2one('ssi_jobs_stage', group_expand='_read_group_stage_ids',
+                               default=lambda self: self.env['ssi_jobs_stage'].search([('name', '=', 'New Job')]), string='Stage')
 
     # LEFT
     name = fields.Char(string="Job Name", required=True, copy=False, readonly=True,
-                   index=True, default=lambda self: _('New'))
+                       index=True, default=lambda self: _('New'))
     partner_id = fields.Many2one(
         'res.partner', string='Partner', ondelete='restrict', required=True,
         domain=[('parent_id', '=', False)])
@@ -64,6 +65,8 @@ class Jobs(models.Model):
     serial = fields.Char(String="Serial #")
     aa_id = fields.Many2one(
         'account.analytic.account', string='Account Analytic')
+    aa_count = fields.Integer(
+        string='Analytics Count', compute='_get_aa_count')
 
     _sql_constraints = [(
         'name_unique',
@@ -75,19 +78,23 @@ class Jobs(models.Model):
     @api.model
     def create(self, vals):
         if vals.get('name', _('New')) == _('New'):
-            vals['name'] = self.env['ir.sequence'].next_by_code('ssi_job_sequence') or _('New')
+            vals['name'] = self.env['ir.sequence'].next_by_code(
+                'ssi_job_sequence') or _('New')
         res = super(Jobs, self).create(vals)
-        name = "AA-"+res.name
-        aa = self.env['account.analytic.account'].sudo().create({'name':name , 'ssi_job_id': res.id})
+        name = res.name
+        group = self.env['account.analytic.group'].search(
+            [('name', '=', 'Jobs')], limit=1).id
+        partner = res.partner_id.id
+        aa = self.env['account.analytic.account'].sudo().create(
+            {'name': name, 'ssi_job_id': res.id, 'group_id': group, 'partner_id': partner})
         res.write({'aa_id': aa.id})
-        # raise UserError(_(res.id))
         return res
+        # raise UserError(_(res.id))
 
     @api.model
-    def _read_group_stage_ids(self,stages,domain,order):
+    def _read_group_stage_ids(self, stages, domain, order):
         stage_ids = self.env['ssi_jobs_stage'].search([])
         return stage_ids
-
 
     @api.multi  # DONE
     def action_view_estimates(self):
@@ -103,7 +110,6 @@ class Jobs(models.Model):
             'ssi_jobs.sale_order_po_line_action').read()[0]
         action['domain'] = [('ssi_job_id', '=', self.id)]
         return action
-
 
     @api.multi
     def action_view_ai_count(self):
@@ -134,10 +140,19 @@ class Jobs(models.Model):
         return action
 
     @api.multi
+    def action_view_aa_count(self):
+        action = self.env.ref(
+            'ssi_jobs.sale_order_aa_line_action').read()[0]
+        action['domain'] = [('ssi_job_id', '=', self.id)]
+        return action
+
+    @api.multi
     def ssi_jobs_new_so_button(self):
         action = self.env.ref(
             'ssi_jobs.ssi_jobs_new_so_action').read()[0]
-        action['domain'] = [('ssi_job_id', '=', self.id), ('analytic_account_id', '=', self.aa_id)]
+        action['domain'] = [('ssi_job_id', '=', self.id)]
+#         action['domain'] = [('ssi_job_id', '=', self.id),
+#                             ('analytic_account_id', '=', self.aa_id)]
         # action['context'] = [('ssi_job_id', '=', self.id), ('aa_id', '=', self.aa_id)]
         return action
 
@@ -203,6 +218,17 @@ class Jobs(models.Model):
     @api.depends('order_total')
     def _get_wc_count(self):
         results = self.env['mrp.workcenter.productivity'].read_group(
+            [('ssi_job_id', 'in', self.ids)], 'ssi_job_id', 'ssi_job_id')
+        dic = {}
+        for x in results:
+            dic[x['ssi_job_id'][0]] = x['ssi_job_id_count']
+        for record in self:
+            record.wc_count = dic.get(
+                record.id, 0)
+
+    @api.depends('order_total')
+    def _get_aa_count(self):
+        results = self.env['account.analytic.account'].read_group(
             [('ssi_job_id', 'in', self.ids)], 'ssi_job_id', 'ssi_job_id')
         dic = {}
         for x in results:

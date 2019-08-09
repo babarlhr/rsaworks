@@ -23,6 +23,7 @@
         'purchase',
         'sale',
         'stock',
+        'sale_timesheet',
         'mail'
     ],
     'data': [

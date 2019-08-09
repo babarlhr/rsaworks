@@ -1,3 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_ssi_attendance,hr.attendance.line,model_hr_attendance_line,,1,1,1,0
 access_ssi_attendance_report,hr_attendance_report,model_hr_attendance_report,,1,0,0,0
+access_ssi_resource_overtime,ssi_resource_overtime,model_ssi_resource_overtime,,1,1,1,1
