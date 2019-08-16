@@ -18,7 +18,6 @@
         'mrp',
         'mrp_maintenance',
         'ssi_jobs',
-
     ],
     "data":  [
         'views/ssi_maintenance.xml',
