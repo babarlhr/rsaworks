@@ -256,6 +256,25 @@
             <field name="type">form</field>
                 <field name="arch" type="xml">
                 
+                <xpath expr="//field[@name='stage_id']" position="before">
+                    <button name="do_print_logistics" type="object" class="oe_stat_button" string="Print"/>
+                </xpath>
+
+                <xpath expr="//field[@name='equipment_id']" position="attributes">
+                    <attribute name="attrs">{}</attribute>
+                    <attribute name="required">1</attribute>
+                 </xpath>
+
+                 <xpath expr="//field[@name='maintenance_type']" position="attributes">
+                    <attribute name="attrs">{}</attribute>
+                    <attribute name="invisible">1</attribute>
+                 </xpath>
+                    
+                <xpath expr="//field[@name='close_date']" position="after">
+                    <field name="logistics_type" attrs ="{'invisible':[('maintenance_team_id','!=', 2)]}"/>
+                    <field name="ssi_job_id"/>
+                </xpath>
+                    
                 <xpath expr="//field[@name='description']" position="after">
 <!--                     if maintenance_team_id.name !== Logistics -->
                     <notebook  attrs ="{'invisible':[('maintenance_team_id','==', 2)]}">
@@ -273,8 +292,8 @@
 
                 </xpath>
 
-                </field>
-            </record>
+            </field>
+        </record>
         
 
     </data>

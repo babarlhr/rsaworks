@@ -186,13 +186,16 @@ class MaintenanceEquipment(models.Model):
 class MaintenanceRequest(models.Model):
     _inherit = 'maintenance.request'
 
-#     megger_test_motor = fields.Selection(
-#         [('1', '1'), ('2', '2'), ('3', '3'), ('4', '4')], string='Megger test motor')
+    ssi_job_id = fields.Many2one('ssi_jobs', related='production_id.ssi_job_id', string='Job', store=True)
     megger_test_motor = fields.Char(string='Megger test motor')
-    rotate_the_shaft = fields.Selection(
-        [('Yes', 'Yes'), ('No', 'No')], string='Rotate the shaft')
-    check_add_oil = fields.Selection(
-        [('Yes', 'Yes'), ('No', 'No')], string='Check/Add oil')
-    verify_location = fields.Selection(
-        [('Yes', 'Yes'), ('No', 'No')], string='Verify Location')
+    rotate_the_shaft = fields.Selection([('Yes', 'Yes'), ('No', 'No')], string='Rotate the shaft')
+    check_add_oil = fields.Selection([('Yes', 'Yes'), ('No', 'No')], string='Check/Add oil')
+    verify_location = fields.Selection([('Yes', 'Yes'), ('No', 'No')], string='Verify Location')
     note_problem = fields.Char(string='Note any problems')
+    logistics_type = fields.Selection([('inbound', 'Inbound'), ('outbound', 'Outbound')], string='Type')
+
+    @api.multi
+    def do_print_logistics(self):
+        self.write({'printed': True})
+        return self.env.ref('ssi_maintenance.ssi_maintenance_logistics_report').report_action(self)
+
