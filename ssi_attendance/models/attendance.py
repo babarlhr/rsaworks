@@ -42,9 +42,9 @@ class HrAttendanceLine(models.Model):
         'open', 'Open'), ('approved', 'Approved')], default='open', track_visibility='onchange')
 
     job_id = fields.Many2one(
-       'ssi_jobs', ondelete='set null', string="Job", index=True)
+       'ssi_jobs', ondelete='set null', string="Job", index=True, required=True)
     workorder_id = fields.Many2one(
-       'mrp.workorder', ondelete='set null', string="Work Order", index=True)
+       'mrp.workorder', ondelete='set null', string="Work Order", index=True, required=True)
 #    labor_code_id = fields.Many2one(
 #        'x_labor.codes', ondelete='set null', string="Labor Code", index=True)
 
