@@ -1,2 +1,5 @@
 /studio_customization
 /.vscode
+
+# dotfiles
+.*
