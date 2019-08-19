@@ -192,7 +192,7 @@ class MaintenanceRequest(models.Model):
     check_add_oil = fields.Selection([('Yes', 'Yes'), ('No', 'No')], string='Check/Add oil')
     verify_location = fields.Selection([('Yes', 'Yes'), ('No', 'No')], string='Verify Location')
     note_problem = fields.Char(string='Note any problems')
-    logistics_type = fields.Selection([('inbound', 'Inbound'), ('outbound', 'Outbound')], string='Type')
+    logistics_type = fields.Selection([('Inbound', 'Inbound'), ('Outbound', 'Outbound')], string='Type')
 
     @api.multi
     def do_print_logistics(self):
