@@ -75,14 +75,20 @@ class HrEmployeeCustom(models.Model):
                 if end == 'True':
                     attendance.check_out = action_date
                     if attendance_line:
-                        attendance_line.check_out = action_date
-                        attendance_line.job_id = job
-                        attendance_line.workorder_id = wo
+                        if not job or not wo:
+                            raise exceptions.UserError(_('Must choose a job and work order to log time.'))
+                        else:
+                            attendance_line.check_out = action_date
+                            attendance_line.job_id = job
+                            attendance_line.workorder_id = wo
                 else:
                     if attendance_line:
-                        attendance_line.check_out = action_date
-                        attendance_line.job_id = job
-                        attendance_line.workorder_id = wo
+                        if not job or not wo:
+                            raise exceptions.UserError(_('Must choose a job and work order to log time.'))
+                        else:
+                            attendance_line.check_out = action_date
+                            attendance_line.job_id = job
+                            attendance_line.workorder_id = wo
                     vals_l = {
                         'employee_id': self.id,
                         'check_in': action_date,
