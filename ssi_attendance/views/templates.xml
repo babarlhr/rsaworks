@@ -21,7 +21,8 @@
             <field name="binding_model_id" ref="hr_attendance.model_hr_attendance" />
             <field name="state">code</field>
             <field name="code">
-              for a in records:
+                records.approve_attendance()
+<!--               for a in records:
                   if a.status == 'approved':
                     raise Warning('Some selected attendances are already approved. Please select only open attendance records.')
                   else:
@@ -36,7 +37,7 @@
                     a.write({
                         'status': 'approved'
                     })
-                    record.env['mrp.workcenter.productivity'].sudo().create(data)
+                    record.env['mrp.workcenter.productivity'].sudo().create(data) -->
             </field>
         </record>
 
