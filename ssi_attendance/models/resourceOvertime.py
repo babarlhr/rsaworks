@@ -12,3 +12,4 @@ class ResourceCalendar(models.Model):
     _inherit = 'resource.calendar'
 
     overtime_rule = fields.Many2one('ssi_resource.overtime', string='Overtime Rules')
+    overtime_eligible = fields.Boolean(string='Eligible for Overtime')

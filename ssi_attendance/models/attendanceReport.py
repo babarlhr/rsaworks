@@ -25,27 +25,10 @@ class AttendanceReport(models.Model):
     hours = fields.Float('Hours Worked', readonly=True)
     straight_time = fields.Float('Straight Time', readonly=True)
     over_time = fields.Float('Over Time', readonly=True)
-#    begin_datetime = fields.Datetime('Begin Date/Time', readonly=True)
-#    end_datetime = fields.Datetime('End Date/Time', readonly=True)
-    # amount = fields.Float('Amount', default=0, readonly=True)
-    # rate = fields.Float('Rate', default=0, readonly=True)
-    # rate_code = fields.Char('Rate Code', default="NONE",  readonly=True)
-    # cc1 = fields.Float('cc1', default=0, readonly=True)
-    # cc2 = fields.Float('cc2', default=0, readonly=True)
-    # cc3 = fields.Float('cc3', default=0, readonly=True)
-    # cc4 = fields.Float('cc4', default=0, readonly=True)
-    # cc5 = fields.Float('cc5', default=0, readonly=True)
-    # job_code = fields.Char('Job Code', default="NONE", readonly=True)
-    # shift = fields.Char('Shift', default="NONE", readonly=True)
-    # wcc = fields.Char('wcc', default="NONE", readonly=True)
-    # tcode1 = fields.Char('Tcode1', default="NONE", readonly=True)
-    # tcode2 = fields.Char('Tcode2', default="NONE", readonly=True)
-    # tcode4 = fields.Char('Tcode4', default="NONE", readonly=True)
-    # sequence = fields.Float('Sequence', default=0, readonly=True)
-    # check_type = fields.Char('Check Type', default="NONE", readonly=True)
-    # check_number = fields.Float('Check Number', default=0, readonly=True)
+    days_worked = fields.Float('Days Worked', readonly=True)
+    double_time = fields.Float('Double Time', readonly=True)
 
-
+    
     def _query(self, with_clause='', fields={}, groupby='', from_clause=''):
         # with_ = ("WITH %s" % with_clause) if with_clause else ""
 
@@ -62,7 +45,20 @@ class AttendanceReport(models.Model):
                 MIN(o.start_hours) as start_hours,
                 SUM(ROUND(CAST(a.worked_hours + 0.00 as Decimal), 2)) as hours,
                 LEAST(sum(a.worked_hours), start_hours) as straight_time,
-                GREATEST(sum(a.worked_hours)-start_hours, 0) as over_time
+                CASE 
+                    WHEN c.overtime_eligible AND COUNT(DISTINCT(DATE_TRUNC('day', a.check_in))) = 7 THEN 
+                        GREATEST(sum(a.worked_hours)-start_hours, 0) - 
+                        SUM(ROUND(CAST(a.worked_hours + 0.00 as Decimal), 2))
+                            FILTER (WHERE EXTRACT('dow' from a.check_in) = 0)
+                    ELSE GREATEST(sum(a.worked_hours)-start_hours, 0)
+                END as over_time,
+                COUNT(DISTINCT(DATE_TRUNC('day', a.check_in))) as days_worked,
+                CASE 
+                    WHEN c.overtime_eligible AND COUNT(DISTINCT(DATE_TRUNC('day', a.check_in))) = 7 THEN 
+                        SUM(ROUND(CAST(a.worked_hours + 0.00 as Decimal), 2))
+                        FILTER (WHERE EXTRACT('dow' from a.check_in) = 0)
+                    ELSE 0
+                END as double_time
             FROM
                 hr_attendance a
                 LEFT JOIN hr_employee b ON b.id = a.employee_id
@@ -71,7 +67,7 @@ class AttendanceReport(models.Model):
             WHERE
                 o.id = 1
             GROUP BY
-                overtime_group, employee_id, employee_badge, department, shift, begin_date, week_no, start_hours
+                overtime_group, employee_id, employee_badge, department, shift, begin_date, week_no, start_hours, c.overtime_eligible
           UNION
             SELECT
                 MIN(a.id) as id,
@@ -85,7 +81,20 @@ class AttendanceReport(models.Model):
                 MIN(o.start_hours) as start_hours,
                 SUM(ROUND(CAST(a.worked_hours + 0.00 as Decimal), 2)) as hours,
                 LEAST(sum(a.worked_hours), start_hours) as straight_time,
-                GREATEST(sum(a.worked_hours)-start_hours, 0) as over_time
+                CASE 
+                    WHEN c.overtime_eligible AND COUNT(DISTINCT(DATE_TRUNC('day', a.check_in))) = 7 THEN 
+                        GREATEST(sum(a.worked_hours)-start_hours, 0) - 
+                        SUM(ROUND(CAST(a.worked_hours + 0.00 as Decimal), 2))
+                            FILTER (WHERE EXTRACT('dow' from a.check_in) = 0)
+                    ELSE GREATEST(sum(a.worked_hours)-start_hours, 0)
+                END as over_time,
+                COUNT(DISTINCT(DATE_TRUNC('day', a.check_in))) as days_worked,
+                CASE 
+                    WHEN c.overtime_eligible AND COUNT(DISTINCT(DATE_TRUNC('day', a.check_in))) = 7 THEN 
+                        SUM(ROUND(CAST(a.worked_hours + 0.00 as Decimal), 2))
+                        FILTER (WHERE EXTRACT('dow' from a.check_in) = 0)
+                    ELSE 0
+                END as double_time
             FROM
                 hr_attendance a
                 LEFT JOIN hr_employee b ON b.id = a.employee_id
@@ -94,7 +103,7 @@ class AttendanceReport(models.Model):
             WHERE
                 o.id = 2
             GROUP BY
-                overtime_group, employee_id, employee_badge, department, shift, begin_date, week_no, start_hours
+                overtime_group, employee_id, employee_badge, department, shift, begin_date, week_no, start_hours, c.overtime_eligible
         """
 
         return select_

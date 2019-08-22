@@ -67,6 +67,7 @@
             <field name="arch" type="xml">
               <xpath expr="//field[@name='tz']" position="after">
                 <field name="overtime_rule"/>
+                <field name="overtime_eligible"/>
               </xpath>
             </field>
         </record>		
