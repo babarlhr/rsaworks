@@ -1,6 +1,7 @@
 
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+import requests
 
 
 class Jobs(models.Model):
@@ -42,7 +43,7 @@ class Jobs(models.Model):
     #     [('horizontal', 'Horizontal'), ('vertical', 'Vertical'), ('other', 'Other')], string='Shaft')
     # dimensions = fields.Float(string='Dimensions')
     equipment_id = fields.Many2one(
-        'maintenance.equipment', string='Equipment')
+        'maintenance.equipment', string='Equipment', required=True)
 
     # RIGHT
     ready_for_pickup = fields.Datetime(string='Ready for Pickup')
@@ -88,9 +89,54 @@ class Jobs(models.Model):
         aa = self.env['account.analytic.account'].sudo().create(
             {'name': name, 'ssi_job_id': res.id, 'group_id': group, 'partner_id': partner})
         res.write({'aa_id': aa.id})
-        return res
-        # raise UserError(_(res.id))
+        
+        login_response = requests.post(
+            'http://api.springpt.com:38136/api/v1/login',
+            headers={'Content-Type': 'application/json'},
+            json={"user_name": "RS_API_USER", "password": "b+PHhK2M", "company_id": "RedStick"},
+        )
+        json_login_response = login_response.json()
+        token = json_login_response['data']['token']
 
+        create_qm_job = requests.post(
+            'http://api.springpt.com:38136/api/v1/RSImportJob',
+            headers={'Content-Type': 'application/json', 'x-access-token': token},
+            json= [{
+                "JobID" : res.name,
+                "CustomerID" : res.partner_id.id,
+                "CustomerName" : res.partner_id.name,
+                "Notes" : "",
+                "Make" : "",
+                "Model" : "",
+                "SerialNumber" : "",
+                "RatingUnit" : res.equipment_id.rating_unit,
+                "Poles" : "",
+                "RPM" : "",
+                "Frame" : "",
+                "Enclosure" : "",
+                "Voltage" : "",
+                "Amps" : "",
+                "ODEBearing" : "",
+                "DEBearing" : "",
+                "CustomerStock" : "",
+                "CustomerIDMotor" : "",
+                "Phase" : "",
+                "Mounting" : "",
+                "Duty" : "",
+                "NEMADesign" : "",
+                "ServiceFactor" : "",
+                "Weight" : "",
+                "BearingType" : "",
+                "StatorWindingType" : "",
+                "LubeType": ""
+            }]
+        )      
+        return res
+#         raise UserError(_(res.id))
+
+        
+        
+        
     @api.model
     def _read_group_stage_ids(self, stages, domain, order):
         stage_ids = self.env['ssi_jobs_stage'].search([])
@@ -235,3 +281,6 @@ class Jobs(models.Model):
         for record in self:
             record.wc_count = dic.get(
                 record.id, 0)
+
+            
+            

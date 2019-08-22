@@ -30,7 +30,6 @@
                             <field name="mounting" attrs="{'required': [('category_id', '!=', 4)]}"/>
                             <field name="manufacture"/>
                             <field name="customer_stock_number"/>
-                            <field name="customer_id_number"/>
                             <field name="amps"/>
                             <field name="rpm_nameplate"/>
                             <field name="phase"/>
@@ -39,7 +38,7 @@
                             <field name="bearing_type"/>
                             <field name="de_bearing"/>
                             <field name="ode_bearing"/>
-
+                            <field name="customer_id_number"/>
                             <field name="customer_id_number_general"/>
                             <field name="customer_id_number_motor_specific"/>
                             <field name="ui_rated"/>

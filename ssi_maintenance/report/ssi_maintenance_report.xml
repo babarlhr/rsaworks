@@ -24,13 +24,11 @@
                             t-options='{"widget": "contact", "fields": ["address", "name", "phone"], "no_marker": True}'/>
                        </t>
                     </t>
-					<div class="page" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id">                                
-						<br/>					
-						<h1 class="mt0 float-left">
-							<t t-esc="o.logistics_type"/> - 
-							<t t-esc="o.display_name"/>
-						</h1>
+					<div class="page article" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id">                                
 						<br/>
+					
+						<h1 t-field="o.display_name" class="mt0 float-left"/>
+												<br/>
                         
 						<div class="clearfix"/>
 						<table class="table table-sm">
@@ -59,7 +57,7 @@
 								</tr>
 							</tbody>
 						</table>                            
-												<br/>
+						<br/>
 
 						<div class="clearfix"/>
 						<table class="table table-sm">

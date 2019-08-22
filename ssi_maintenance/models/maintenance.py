@@ -80,7 +80,7 @@ class MaintenanceEquipment(models.Model):
 
     ssi_jobs_count = fields.Integer(
         string='Jobs', compute='_get_ssi_jobs_count')
-
+    
     customer_id_number_general = fields.Char(string='Customer ID# General')
     customer_id_number_motor_specific = fields.Char(
         string='Customer ID# General Motor Specific')
@@ -131,14 +131,18 @@ class MaintenanceEquipment(models.Model):
         )
         json_login_response = login_response.json()
         token = json_login_response['data']['token']
+        
+        last_job = self.env['ssi_jobs'].search([('equipment_id', '=', self.id)], order="create_date desc", limit=1)
+        
+#         raise UserError(_(last_job.name))
+
         nameplate_response = requests.get(
-            'http://api.springpt.com:38136/api/v1/RSReturnNamePlate/EM-1000',
+            'http://api.springpt.com:38136/api/v1/RSReturnNamePlate/'+last_job.name,
             headers={'x-access-token': token}
         )
         nameplate_response_json = nameplate_response.json()
         nameplate_data = nameplate_response_json['data']
-#         raise UserError(_(nameplate_data[0]['Equip ID']))
-# 
+        
         self.write({
 #             'equip_id': nameplate_data[0]['Equip ID'],
             'description': nameplate_data[0]['Description'],
@@ -192,7 +196,7 @@ class MaintenanceRequest(models.Model):
     check_add_oil = fields.Selection([('Yes', 'Yes'), ('No', 'No')], string='Check/Add oil')
     verify_location = fields.Selection([('Yes', 'Yes'), ('No', 'No')], string='Verify Location')
     note_problem = fields.Char(string='Note any problems')
-    logistics_type = fields.Selection([('Inbound', 'Inbound'), ('Outbound', 'Outbound')], string='Type')
+    logistics_type = fields.Selection([('inbound', 'Inbound'), ('outbound', 'Outbound')], string='Type')
 
     @api.multi
     def do_print_logistics(self):
