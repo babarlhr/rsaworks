@@ -23,6 +23,9 @@ class HrAttendance(models.Model):
                 # 'x_studio_labor_codes': self.labor_code_id.id
             }
             line.status = 'approved'
+#             self.write({
+#                 'status': 'approved'
+#             })
             self.env['mrp.workcenter.productivity'].sudo().create(data)
         self.status = 'approved'
 

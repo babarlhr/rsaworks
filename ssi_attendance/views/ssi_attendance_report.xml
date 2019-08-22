@@ -28,9 +28,11 @@
 			<field name="employee_id"/>
 			<field name="department"/>
 			<field name="shift"/>
+			<field name="days_worked"/>
 			<field name="hours"/>
 			<field name="straight_time"/>
 			<field name="over_time"/>
+			<field name="double_time"/>
 		</tree>
 	  </field>
 	</record>
