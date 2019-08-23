@@ -5,61 +5,81 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 from odoo.tools import float_round, float_compare
 
+class MRPWorkcenter(models.Model):
+    _inherit = 'mrp.workcenter'
+
+    overhead_costs_hour = fields.Float('Overhead Cost per Hour')
 
 class MRPRoutingWorkcenter(models.Model):
     _inherit = 'mrp.routing.workcenter'
 
-    cycle_nbr = fields.Float(
-        string='Std No. of Cycles',
-        help="Number of iterations this work center has to do in the "
-             "specified operation of the routing."
+    time_cycle_std = fields.Float(
+        'Standard Duration',
+        help="Time in mins for doing one cycle."
     )
-    hour_nbr = fields.Float(
-        string='Std No. of Hours',
-        help="Time in hours for this Work Center to achieve the operation "
-             "of the specified routing."
-    )
-
-
-class MRPWorkcenter(models.Model):
-    _inherit = 'mrp.workcenter'
-
+    
     @api.multi
     def _get_wo_std_labor_overhead(self):
-        for wc in self:
+        for operation in self:
+
+            wc = operation.workcenter_id
+            labor_cost = wc.costs_hour
+            ovh_cost = wc.overhead_costs_hour
+
+            cycle_number = float_round(1 / wc.capacity, precision_digits=2, rounding_method='UP')
+            duration = float_round((wc.time_start + wc.time_stop + cycle_number * operation.time_cycle_std * (100/wc.time_efficiency)) / 60, precision_digits=2)
+
             # Calculate valuation_amount
-            valuation_amount = \
-                (wc.time_start + wc.time_stop + wc.time_cycle)*wc.costs_hour \
-                + wc.capacity*wc.costs_cycle
+            valuation_amount = duration * labor_cost
+
             # Calculate Overhead Amount
-            overhead_valuation_amount = \
-                (wc.time_start + wc.time_stop + wc.time_cycle) \
-                * wc.overhead_cost_per_cycle
-            wc.update({
+            overhead_valuation_amount = duration * ovh_cost
+
+            operation.update({
                 'std_labor': valuation_amount,
                 'std_overhead': overhead_valuation_amount,
             })
 
-    costs_cycle = fields.Float(
-        'Cost per cycle',
-        help="Specify Cost of Work Center per cycle."
-    )
-    time_cycle = fields.Float(
-        'Time for 1 cycle (hour)',
-        help="Time in hours for doing one cycle."
-    )
-    overhead_cost_per_cycle = fields.Float('Overhead Cost per Hour')
-    overhead_cost_acc_id = fields.Many2one(
-        'account.account',
-        string='Overhead Cost Account'
-    )
+    @api.multi
+    def _get_wo_real_labor_overhead(self):
+        for operation in self:
+
+            wc = operation.workcenter_id
+            labor_cost = wc.costs_hour
+            ovh_cost = wc.overhead_costs_hour
+
+            cycle_number = float_round(1 / wc.capacity, precision_digits=2, rounding_method='UP')
+            duration = float_round(operation.time_cycle, precision_digits=2)
+
+            # Calculate valuation_amount
+            valuation_amount = duration * labor_cost
+
+            # Calculate Overhead Amount
+            overhead_valuation_amount = duration * ovh_cost
+
+            operation.update({
+                'real_labor': valuation_amount,
+                'real_overhead': overhead_valuation_amount,
+            })
+            
     std_labor = fields.Float(
-        'Std. Labor',
+        'Std Labor',
         compute='_get_wo_std_labor_overhead'
     )
+
     std_overhead = fields.Float(
-        'Std. Overhead',
+        'Std Overhead',
         compute='_get_wo_std_labor_overhead'
+    )
+
+    real_labor = fields.Float(
+        'Avg Actual Labor',
+        compute='_get_wo_real_labor_overhead'
+    )
+
+    real_overhead = fields.Float(
+        'Avg Actual Overhead',
+        compute='_get_wo_real_labor_overhead'
     )
 
 
@@ -69,73 +89,70 @@ class MRPWorkorder(models.Model):
     @api.multi
     def _compute_wo_costs_overview(self):
         for wo in self:
-            # Calculate Std Labor
-            cycle_cost = wo.cycle * wo.costs_cycle
-            std_hours = \
-                (wo.time_start + wo.time_stop + wo.hour * wo.cycle)
-            hour_cost = std_hours * wo.costs_hour
-            cost = cycle_cost + hour_cost
-            # the company currency... so we need to use round() before creating
-            # the accounting entries.
-            std_labor_cost = \
-                wo.production_id and \
-                (wo.production_id.company_id.currency_id.
-                    round(cost * wo.qty_production)) or 0
+        
+            wc = wo.workcenter_id
+            op = wo.operation_id
+            
+            labor_cost = wc.costs_hour
+            ovh_cost = wc.overhead_costs_hour
+            
+            cycle_number = float_round((wo.qty_production) / wc.capacity, precision_digits=2, rounding_method='UP')
+            duration_std = float_round((wc.time_start + wc.time_stop + cycle_number * wo.operation_id.time_cycle_std * (100/wc.time_efficiency)) / 60, precision_digits=2)
+            duration_real = wc.time_start + wc.time_stop + (cycle_number * wo.duration) / 60 * (100/wc.time_efficiency)
 
-            # Calculation Std Overhead
-            std_overhead_cost = std_hours * wo.overhead_cost_per_cycle
-            std_overhead_cost = \
-                wo.production_id and \
-                (wo.production_id.company_id.currency_id.
-                    round(std_overhead_cost * wo.qty_production)) or 0
-
-            # Calculation Variance Labor and Overhead
-            actual_hours = wo.duration
-            # difference in hours
-            diff = 0
-            if not actual_hours:
-                diff = actual_hours - std_hours
-            variance_labor = diff * wo.costs_hour
-            variance_labor = \
-                wo.production_id and \
-                (wo.production_id.company_id.currency_id.
-                    round(variance_labor * wo.qty_production)) or 0
-            variance_overhead = std_hours and \
-                                (wo.overhead_cost_per_cycle * diff) or 0.0
-            variance_overhead = \
-                wo.production_id and \
-                (wo.production_id.company_id.currency_id.
-                    round(variance_overhead * wo.qty_production)) or 0
-
+            # standard costs
+            # extra work -- all variance
+            if wo.add_consumption:
+                std_labor_cost = 0.0
+                std_overhead_cost = 0.0
+                
+            # standard work order
+            else:
+                std_labor_cost = duration_std * labor_cost
+                std_overhead_cost = duration_std * ovh_cost
+            
+            # real costs
+            real_labor_cost = duration_real * labor_cost
+            real_overhead_cost = duration_real * ovh_cost
+            
+            # variance
+            variance_labor = real_labor_cost - std_labor_cost
+            variance_overhead = real_overhead_cost - std_overhead_cost
+            
             wo.update({
                 'std_labor': std_labor_cost,
                 'std_overhead': std_overhead_cost,
+                'real_labor': real_labor_cost,
+                'real_overhead': real_overhead_cost,
                 'variance_labor': variance_labor,
                 'variance_overhead': variance_overhead
             })
 
+    rework_qty = fields.Float(
+        string='Rework Quantity',
+    )
+    
     add_consumption = fields.Boolean(
         string='Extra Work',
         default=False,
         help='Marks WO that are added for Extra labor. '
              'May have additional material used up too.'
     )
-    rework_qty = fields.Float('Rework Qty')
-    actual_variance_labor = fields.Float('Actual Labor Variance')
-    actual_variance_overhead = fields.Float('Actual Overhead Variance')
-    cycle = fields.Float('Number of Cycles')
-    costs_cycle = fields.Float('Cost per Cycle')
-    time_start = fields.Float('Time for Setup')
-    time_stop = fields.Float('Time for Cleanup')
-    hour = fields.Float('Number of Hours')
-    costs_hour = fields.Float('Cost per Hour')
-    overhead_cost_per_cycle = fields.Float('Overhead Cost per Hour')
+    
     std_labor = fields.Float(
-        string='Std. Labor',
+        string='Std Labor',
         compute='_compute_wo_costs_overview'
     )
     std_overhead = fields.Float(
-        string='Std. Overhead',
+        string='Std Overhead',
+        compute='_compute_wo_costs_overview'
+    )
+    real_labor = fields.Float(
+        string='Actual Labor',
+        compute='_compute_wo_costs_overview'
+    )
+    real_overhead = fields.Float(
+        string='Actual Overhead',
         compute='_compute_wo_costs_overview'
     )
     variance_labor = fields.Float(
@@ -146,8 +163,7 @@ class MRPWorkorder(models.Model):
         string='Computed Overhead Variance',
         compute='_compute_wo_costs_overview'
     )
-
-
+    
     @api.multi
     def record_production(self):
         if not self:
@@ -279,45 +295,33 @@ class MRPWorkorder(models.Model):
         return True
 
     @api.multi
-    def button_start(self):
-        res = super(MRPWorkorder, self).button_start()
+    def button_finish(self):
+        res = super(MRPWorkorder, self).button_finish()
         for wo in self:
-            if not wo.add_consumption:
-            # Make Manufacturing Account to WIP Account Move
-                wo._create_wo_start_account_move()
-            else:
-                wo._create_wo_account_move()
+            wo._create_wo_account_move()
+            if wo.variance_labor or wo.variance_overhead:
+                wo._create_variance_account_move()
         return res
 
     @api.multi
-    def _create_wo_account_move(self):
+    def _create_variance_account_move(self):
         move_obj = self.env['account.move']
         for workorder in self:
             # Calculate valuation_amount
             product = workorder.product_id
             qty = workorder.qty_production
             production = workorder.production_id
-            # Calculate valuation_amount for Labor
-            cycle_cost = workorder.cycle * workorder.costs_cycle
-            hour_cost = (workorder.time_start + workorder.time_stop + workorder.hour * workorder.cycle) * workorder.costs_hour
-            valuation_amount = cycle_cost + hour_cost
-
-            valuation_amount = (workorder.rework_qty/qty) * valuation_amount
-            # the company currency... so we need to use round() before creating the accounting entries.
-            valuation_amount = production and (production.company_id.currency_id.round(valuation_amount * qty)) or 0
 
             # Prepare accounts
             accounts = product.product_tmpl_id.get_product_accounts()
             journal_id = accounts['stock_journal'].id
             debit_account_id = accounts['labor_variance_acc_id'].id
-            credit_account_id = accounts['manufacturing_acc_id'].id
+            credit_account_id = accounts['production_account_id'].id
 
             if not debit_account_id or not credit_account_id:
                 raise UserError(_("Manufacturing Account and/or Labor Variance Account needs to be set on the product %s.") % (product.name,))
             # Create data for account move and post them
-            name = production.name + '-' + 'Extra Labor::' + workorder.name
-            analytic_account = self.env['account.analytic.account'].search(
-                [('manufacture','=',True)], limit=1)
+            name = production.name + '-' + 'Variance::' + workorder.name
             debit_line_vals = {
                 'name': name,
                 'product_id': product.id,
@@ -325,10 +329,9 @@ class MRPWorkorder(models.Model):
                 'product_uom_id': product.uom_id.id,
                 'ref': production.name or False,
                 'partner_id': False,
-                'debit': valuation_amount > 0 and valuation_amount or 0,
-                'credit': valuation_amount < 0 and -valuation_amount or 0,
+                'credit': workorder.variance_labor > 0 and workorder.variance_labor or 0,
+                'debit': workorder.variance_labor < 0 and -workorder.variance_labor or 0,
                 'account_id': debit_account_id,
-                'analytic_account_id': analytic_account.id,
             }
             credit_line_vals = {
                 'name': name,
@@ -337,26 +340,19 @@ class MRPWorkorder(models.Model):
                 'product_uom_id': product.uom_id.id,
                 'ref': production.name or False,
                 'partner_id': False,
-                'credit': valuation_amount > 0 and valuation_amount or 0,
-                'debit': valuation_amount < 0 and -valuation_amount or 0,
+                'debit': workorder.variance_labor > 0 and workorder.variance_labor or 0,
+                'credit': workorder.variance_labor < 0 and -workorder.variance_labor or 0,
                 'account_id': credit_account_id,
-                'analytic_account_id': analytic_account.id,
             }
             move_lines = [(0, 0, debit_line_vals), (0, 0, credit_line_vals)]
 
             # Create an data entry for Overhead
-            # Calculate Overhead Amount
-            overhead_valuation_amount = (workorder.time_start + workorder.time_stop + workorder.hour * workorder.cycle) * workorder.overhead_cost_per_cycle
-            overhead_valuation_amount = (workorder.rework_qty/qty) * overhead_valuation_amount
-
-            # the company currency... so we need to use round() before creating the accounting entries.
-            overhead_valuation_amount = production and (production.company_id.currency_id.round(overhead_valuation_amount * qty)) or 0
             debit_account_id = accounts['overhead_variance_acc_id'] and accounts['overhead_variance_acc_id'].id or False
-            credit_account_id = accounts['overhead_absorption_acc_id'] and accounts['overhead_absorption_acc_id'].id or False
+            credit_account_id = accounts['production_account_id'] and accounts['production_account_id'].id or False
             if not debit_account_id or not credit_account_id:
                 raise UserError(_("It seems Overhead Accounts for product %s is not set. Which means there is probably a configuration error") % (product.name,))
             # Create data for account move and post them
-            name = production.name + '-' + 'Extra Overhead::' + workorder.name
+            name = production.name + '-' + 'Variance Overhead::' + workorder.name
             debit_line_vals = {
                 'name': name,
                 'product_id': product.id,
@@ -364,10 +360,9 @@ class MRPWorkorder(models.Model):
                 'product_uom_id': product.uom_id.id,
                 'ref': production.name or False,
                 'partner_id': False,
-                'debit': overhead_valuation_amount > 0 and overhead_valuation_amount or 0,
-                'credit': overhead_valuation_amount < 0 and -overhead_valuation_amount or 0,
+                'credit': workorder.variance_overhead > 0 and workorder.variance_overhead  or 0,
+                'debit': workorder.variance_overhead  < 0 and -workorder.variance_overhead  or 0,
                 'account_id': debit_account_id,
-                'analytic_account_id': analytic_account.id,
             }
             credit_line_vals = {
                 'name': name,
@@ -376,10 +371,9 @@ class MRPWorkorder(models.Model):
                 'product_uom_id': product.uom_id.id,
                 'ref': production.name or False,
                 'partner_id': False,
-                'credit': overhead_valuation_amount > 0 and overhead_valuation_amount or 0,
-                'debit': overhead_valuation_amount < 0 and -overhead_valuation_amount or 0,
+                'debit': workorder.variance_overhead  > 0 and workorder.variance_overhead  or 0,
+                'credit': workorder.variance_overhead  < 0 and -workorder.variance_overhead  or 0,
                 'account_id': credit_account_id,
-                'analytic_account_id': analytic_account.id,
             }
             move_lines.append((0, 0, debit_line_vals))
             move_lines.append((0, 0, credit_line_vals))
@@ -394,23 +388,98 @@ class MRPWorkorder(models.Model):
         return True
 
     @api.multi
+    def _create_wo_account_move(self):
+        move_obj = self.env['account.move']
+        for workorder in self:
+        
+            # create default entry
+            if not workorder.add_consumption:
+                workorder._create_wo_start_account_move()
+            
+            # Calculate valuation_amount
+            product = workorder.product_id
+            qty = workorder.qty_production
+            production = workorder.production_id
+
+            # Prepare accounts
+            accounts = product.product_tmpl_id.get_product_accounts()
+            journal_id = accounts['stock_journal'].id
+            debit_account_id = accounts['labor_variance_acc_id'].id
+            credit_account_id = accounts['production_account_id'].id
+
+            if not debit_account_id or not credit_account_id:
+                raise UserError(_("Manufacturing Account and/or Labor Variance Account needs to be set on the product %s.") % (product.name,))
+            # Create data for account move and post them
+            name = production.name + '-' + 'Extra Labor::' + workorder.name
+            debit_line_vals = {
+                'name': name,
+                'product_id': product.id,
+                'quantity': qty,
+                'product_uom_id': product.uom_id.id,
+                'ref': production.name or False,
+                'partner_id': False,
+                'credit': workorder.std_labor > 0 and workorder.std_labor or 0,
+                'debit': workorder.std_labor < 0 and -workorder.std_labor or 0,
+                'account_id': debit_account_id,
+            }
+            credit_line_vals = {
+                'name': name,
+                'product_id': product.id,
+                'quantity': qty,
+                'product_uom_id': product.uom_id.id,
+                'ref': production.name or False,
+                'partner_id': False,
+                'debit': workorder.std_labor > 0 and workorder.std_labor or 0,
+                'credit': workorder.std_labor < 0 and -workorder.std_labor or 0,
+                'account_id': credit_account_id,
+            }
+            move_lines = [(0, 0, debit_line_vals), (0, 0, credit_line_vals)]
+
+            # Create an data entry for Overhead
+            debit_account_id = accounts['overhead_variance_acc_id'] and accounts['overhead_variance_acc_id'].id or False
+            credit_account_id = accounts['production_account_id'] and accounts['production_account_id'].id or False
+            if not debit_account_id or not credit_account_id:
+                raise UserError(_("It seems Overhead Accounts for product %s is not set. Which means there is probably a configuration error") % (product.name,))
+            # Create data for account move and post them
+            name = production.name + '-' + 'Extra Overhead::' + workorder.name
+            debit_line_vals = {
+                'name': name,
+                'product_id': product.id,
+                'quantity': qty,
+                'product_uom_id': product.uom_id.id,
+                'ref': production.name or False,
+                'partner_id': False,
+                'credit': workorder.std_overhead > 0 and workorder.std_overhead  or 0,
+                'debit': workorder.std_overhead  < 0 and -workorder.std_overhead  or 0,
+                'account_id': debit_account_id,
+            }
+            credit_line_vals = {
+                'name': name,
+                'product_id': product.id,
+                'quantity': qty,
+                'product_uom_id': product.uom_id.id,
+                'ref': production.name or False,
+                'partner_id': False,
+                'debit': workorder.std_overhead  > 0 and workorder.std_overhead  or 0,
+                'credit': workorder.std_overhead  < 0 and -workorder.std_overhead  or 0,
+                'account_id': credit_account_id,
+            }
+            move_lines.append((0, 0, debit_line_vals))
+            move_lines.append((0, 0, credit_line_vals))
+
+            if move_lines:
+                new_move = move_obj.create(
+                    {'journal_id': journal_id,
+                     'line_ids': move_lines,
+                     'date': fields.Date.context_today(self),
+                     'ref': name or ''})
+                new_move.post()
+        return True
+
     def _create_wo_start_account_move(self):
 
         move_obj = self.env['account.move']
         debit_account_id = False
-
-        # Calculate valuation_amount for Labor
-        print ("\n===self.cycle=====", self.cycle, self.costs_cycle)
-        cycle_cost = self.cycle * self.costs_cycle
-        print ("\n===cycle_cost====", cycle_cost)
-        print ("\n===self.time_start + self.time_stop + self.hour * self.cycle======", self.time_start, self.time_stop, self.hour, self.cycle)
-        hour_cost = (self.time_start + self.time_stop + self.hour * self.cycle) * self.costs_hour
-        print ("\n===hour_cost=", hour_cost)
-        valuation_amount = cycle_cost + hour_cost
-        print ("\n===valuation_amount======", valuation_amount)
-
-        # the company currency... so we need to use round() before creating the accounting entries.
-        valuation_amount = self.production_id and (self.production_id.company_id.currency_id.round(valuation_amount * self.qty_production)) or 0
 
         # adding extra material and extra step, fetch debit account from move
         if self.production_id.move_raw_ids:
@@ -421,7 +490,7 @@ class MRPWorkorder(models.Model):
         else:
             debit_account_id = self.production_id.routing_id.location_id.valuation_in_account_id.id or False
             if not debit_account_id:
-                debit_account_id = self.product_id.property_stock_production.valuation_in_account_id.id or False
+                debit_account_id = self.product.property_stock_production.valuation_in_account_id.id or False
 
         # Prepare accounts
         accounts = self.product_id.product_tmpl_id.get_product_accounts()
@@ -430,11 +499,9 @@ class MRPWorkorder(models.Model):
 
         if not debit_account_id or not credit_account_id:
             raise UserError(_("It seems Manufacturing Account or Labor Variance Account for product %s is not set. Which means there is probably a configuration error") % (self.product_id.name,))
+            
         # Create data for account move and post them
         name = self.production_id.name + '-' + 'Std Labor::' + self.name
-        analytic_account = self.env['account.analytic.account'].search(
-            [('manufacture','=',True)], limit=1)
-
         debit_line_vals = {
             'name': name,
             'product_id': self.product_id.id,
@@ -442,10 +509,9 @@ class MRPWorkorder(models.Model):
             'product_uom_id': self.product_id.uom_id.id,
             'ref': self.production_id.name or False,
             'partner_id': False,
-            'debit': valuation_amount > 0 and valuation_amount or 0,
-            'credit': valuation_amount < 0 and -valuation_amount or 0,
+            'debit': self.std_labor > 0 and self.std_labor or 0,
+            'credit': self.std_labor < 0 and -self.std_labor or 0,
             'account_id': debit_account_id,
-            'analytic_account_id': analytic_account.id,
         }
         credit_line_vals = {
             'name': name,
@@ -454,22 +520,16 @@ class MRPWorkorder(models.Model):
             'product_uom_id': self.product_id.uom_id.id,
             'ref': self.production_id.name or False,
             'partner_id': False,
-            'credit': valuation_amount > 0 and valuation_amount or 0,
-            'debit': valuation_amount < 0 and -valuation_amount or 0,
+            'credit': self.std_labor > 0 and self.std_labor or 0,
+            'debit': self.std_labor < 0 and -self.std_labor or 0,
             'account_id': credit_account_id,
-            'analytic_account_id': analytic_account.id,
         }
         move_lines = [(0, 0, debit_line_vals), (0, 0, credit_line_vals)]
-
-        # Create an data entry for Overhead
-        # Calculate Overhead Amount
-        overhead_valuation_amount = (self.time_start + self.time_stop + self.hour * self.cycle) * self.overhead_cost_per_cycle
-        # the company currency... so we need to use round() before creating the accounting entries.
-        overhead_valuation_amount = self.production_id and (self.production_id.company_id.currency_id.round(overhead_valuation_amount * self.qty_production)) or 0
 
         credit_account_id = accounts['overhead_absorption_acc_id'] and accounts['overhead_absorption_acc_id'].id or False
         if not debit_account_id or not credit_account_id:
             raise UserError(_("It seems Overhead Absorption Account for product %s is not set. Which means there is probably a configuration error") % (self.product.name,))
+            
         # Create data for account move and post them
         name = self.production_id.name + '-' + 'Std Overhead::' + self.name
         debit_line_vals = {
@@ -479,10 +539,9 @@ class MRPWorkorder(models.Model):
             'product_uom_id': self.product_id.uom_id.id,
             'ref': self.production_id.name or False,
             'partner_id': False,
-            'debit': overhead_valuation_amount > 0 and overhead_valuation_amount or 0,
-            'credit': overhead_valuation_amount < 0 and -overhead_valuation_amount or 0,
+            'debit': self.std_overhead > 0 and self.std_overhead or 0,
+            'credit': self.std_overhead < 0 and -self.std_overhead or 0,
             'account_id': debit_account_id,
-            'analytic_account_id': analytic_account.id,
         }
         credit_line_vals = {
             'name': name,
@@ -491,10 +550,9 @@ class MRPWorkorder(models.Model):
             'product_uom_id': self.product_id.uom_id.id,
             'ref': self.production_id.name or False,
             'partner_id': False,
-            'credit': overhead_valuation_amount > 0 and overhead_valuation_amount or 0,
-            'debit': overhead_valuation_amount < 0 and -overhead_valuation_amount or 0,
+            'credit': self.std_overhead > 0 and self.std_overhead or 0,
+            'debit': self.std_overhead < 0 and -self.std_overhead or 0,
             'account_id': credit_account_id,
-            'analytic_account_id': analytic_account.id,
         }
         move_lines.append((0, 0, debit_line_vals))
         move_lines.append((0, 0, credit_line_vals))
@@ -525,39 +583,46 @@ class MRPProduction(models.Model):
     @api.multi
     def _compute_wo_lines_costs_overview(self):
         for production in self:
-            total_std_labor = total_std_overhead = total_variance_labor = 0
-            total_std_material = total_variance_overhead = 0
+            std_labor = std_overhead = variance_labor = variance_overhead =0
+            std_material = variance_material = 0
+            real_labor = real_overhead = real_material = 0
+            
             # Compute Std & Variance labor overhead
             for wo in production.workorder_ids:
-                total_std_labor += wo.std_labor
-                total_std_overhead += wo.std_overhead
-                total_variance_labor += wo.variance_labor or \
-                                        wo.actual_variance_labor
-                total_variance_overhead += wo.variance_overhead or \
-                                           wo.actual_variance_overhead
+                std_labor += wo.std_labor
+                std_overhead += wo.std_overhead
+                real_labor += wo.real_labor
+                real_overhead += wo.real_overhead
+                variance_labor += wo.variance_labor
+                variance_overhead += wo.variance_overhead
+                
             # Compute Std material
             for bom_line in production.bom_id.bom_line_ids:
                 new_qty = bom_line.product_qty / bom_line.product_efficiency
-                total_std_material += production.company_id.currency_id.round(
+                std_material += production.company_id.currency_id.round(
                     bom_line.product_id.uom_id._compute_price(
                         bom_line.product_id.standard_price,
                         bom_line.product_uom_id)
                     * new_qty)
-            # Compute Std material
-            total_variance_material = 0
+            # Compute variance material
             for move in production.move_raw_ids:
                 if move.add_consumption:
                     valuation_amount = move.product_id.standard_price \
                                        * move.product_qty
-                    total_variance_material += move.company_id.currency_id.\
+                    variance_material += move.company_id.currency_id.\
                         round(valuation_amount * move.product_qty)
+                        
+            real_material = std_material * production.product_qty + variance_material
             production.update({
-                'std_labor': total_std_labor,
-                'std_overhead': total_std_overhead,
-                'std_material': total_std_material * production.product_qty,
-                'variance_labor': total_variance_labor,
-                'variance_overhead': total_variance_overhead,
-                'variance_material': total_variance_material
+                'std_labor': std_labor,
+                'std_overhead': std_overhead,
+                'std_material': std_material * production.product_qty,
+                'real_labor': real_labor,
+                'real_overhead': real_overhead,
+                'real_material': real_material,
+                'variance_labor': variance_labor,
+                'variance_overhead': variance_overhead,
+                'variance_material': variance_material
             })
 
     std_labor = fields.Float(
@@ -572,6 +637,18 @@ class MRPProduction(models.Model):
         string='Std. Material',
         compute='_compute_wo_lines_costs_overview'
     )
+    real_labor = fields.Float(
+        string='Actual Labor',
+        compute='_compute_wo_lines_costs_overview'
+    )
+    real_overhead = fields.Float(
+        string='Actual Overhead',
+        compute='_compute_wo_lines_costs_overview'
+    )    
+    real_material = fields.Float(
+        string='Actual Material',
+        compute='_compute_wo_lines_costs_overview'
+    )    
     variance_labor = fields.Float(
         string='Labor Variance',
         compute='_compute_wo_lines_costs_overview'
@@ -581,7 +658,7 @@ class MRPProduction(models.Model):
         compute='_compute_wo_lines_costs_overview'
     )
     variance_material = fields.Float(
-        string='Variance Material',
+        string='Material Variance',
         compute='_compute_wo_lines_costs_overview'
     )
 
@@ -615,3 +692,23 @@ class MRPProduction(models.Model):
         # Link moves to Workorder so raw materials can be consume in it
         move._action_confirm()
         return move
+
+    def _cal_price(self, consumed_moves):
+        """Set a price unit on the finished move according to `consumed_moves`.
+        """
+        production_cost = ovh_cost = labor_cost = mtl_cost = 0.0
+        if consumed_moves:
+            mtl_cost = super(MRPProduction, self)._cal_price(consumed_moves)
+            
+        for workorder in self.workorder_ids:
+            labor_cost += workorder.real_labor
+            ovh_cost += workorder.real_overhead
+            
+        production_cost = mtl_cost + labor_cost + ovh_cost
+        
+        finished_move = self.move_finished_ids.filtered(lambda x: x.product_id == self.product_id and x.state not in ('done', 'cancel') and x.quantity_done > 0)
+        if finished_move:
+            finished_move.ensure_one()
+            finished_move.value = production_cost
+            finished_move.price_unit = production_cost / finished_move.product_uom_qty
+        return True

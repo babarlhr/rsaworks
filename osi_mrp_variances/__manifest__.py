@@ -5,7 +5,7 @@
     "name": "MRP WIP Labor/Material Variance",
     "summary": "Adds journal entries for standard labor and overhead "
                "absorption, variances in material, labor and overhead",
-    "version": "11.0.1.1.0",
+    "version": "12.0.1.0.0",
     "license": "AGPL-3",
     "author": "Open Source Integrators",
     "category": "Manufacturing",

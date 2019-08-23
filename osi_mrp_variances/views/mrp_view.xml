@@ -18,8 +18,6 @@
                             <field name="add_consumption"/>
                             <field name="rework_qty" attrs="{'invisible':[('add_consumption','=',False)], 'readonly':[('state','not in', ['draft','ready'])]}"/>
                             <field name="workcenter_id"/>
-                            <field name="cycle" string="Std No. of Cycles"/>
-                            <field name="hour" widget="float_time" string="Std No. of Hours"/>
                             <field name="state"/>
                         </tree>
                     </field>
@@ -43,11 +41,16 @@
             </xpath>
             <xpath expr="//page[last()]" position="inside">
                 <group name="labor_variance_overhead">
-                    <group string="Labor and Overhead">
+                    <group string="Standard Costs">
                         <field name="std_labor"/>
                         <field name="std_overhead"/>
                         <field name="std_material"/>
                     </group>
+                    <group string="Actual Costs">
+                        <field name="real_labor"/>
+                        <field name="real_overhead"/>
+                        <field name="real_material"/>
+                    </group>                    
                     <group string="Labor and Overhead Variance">
                         <field name="variance_labor"/>
                         <field name="variance_overhead"/>
@@ -78,23 +81,15 @@
                 <field name="rework_qty" attrs="{'invisible':[('add_consumption','=',False)], 'readonly':[('state','not in', ['draft','ready'])]}"/>
             </field>
             <xpath expr="//page[3]/group" postion="after">
-                <group string="Duration">
-                    <field name="cycle"/>
-            		<field name="hour"/>
-                </group>
-                <group string="Costing">
-                    <field name="costs_hour"/>
-                    <field name="overhead_cost_per_cycle"/>
-                    <field name="time_start"/>
-                    <field name="time_stop"/>
-                </group>
                 <group string="Labor and Overhead">
             		<field name="std_labor"/>
             		<field name="std_overhead"/>
+            		<field name="real_labor"/>
+            		<field name="real_overhead"/>                    
             	</group>
             	<group string="Labor and Overhead Variance">
-            		<field name="actual_variance_labor"/>
-            		<field name="actual_variance_overhead"/>
+            		<field name="variance_labor"/>
+            		<field name="variance_overhead"/>
             	</group>
             </xpath>
         </field>
@@ -105,39 +100,8 @@
         <field name="model">mrp.workcenter</field>
         <field name="inherit_id" ref="mrp_account.mrp_workcenter_view_inherit" />
         <field name="arch" type="xml">
-            <field name="costs_hour_account_id" position="after">
-                <field name="costs_cycle"/>
-                <field name="overhead_cost_per_cycle"/>
-                <field name="overhead_cost_acc_id"/>
-            </field>
-            <xpath expr="//page[1]/group/group[last()]" position="after">
-                <group string="Labor and Overhead">
-                    <field name="std_labor"/>
-                    <field name="std_overhead"/>
-                </group>
-            </xpath>
-	    </field>
-    </record>
-
-    <record id="mrp_workcenter_time_cycle_view" model="ir.ui.view">
-        <field name="name">mrp.workcenter.timecycle.form.inherit</field>
-        <field name="model">mrp.workcenter</field>
-        <field name="inherit_id" ref="mrp.mrp_workcenter_view" />
-        <field name="arch" type="xml">
-            <field name="capacity" position="after">
-                <field name="time_cycle"/>
-            </field>
-	    </field>
-    </record>
-
-    <record id="mrp_routing_workcenter_cycle_tree_view" model="ir.ui.view">
-        <field name="name">mrp.routing.workcenter.cycle.tree</field>
-        <field name="model">mrp.routing.workcenter</field>
-        <field name="inherit_id" ref="mrp.mrp_routing_workcenter_tree_view" />
-        <field name="arch" type="xml">
-            <field name="workcenter_id" position="after">
-                <field name="cycle_nbr"/>
-                <field name="hour_nbr"/>
+            <field name="costs_hour" position="after">
+                <field name="overhead_costs_hour"/>
             </field>
 	    </field>
     </record>
@@ -147,9 +111,32 @@
         <field name="model">mrp.routing.workcenter</field>
         <field name="inherit_id" ref="mrp.mrp_routing_workcenter_form_view" />
         <field name="arch" type="xml">
+            <field name="time_cycle" position="replace">
+                <field name='time_cycle_std' widget='float_time'/>
+                <field name="time_cycle_manual" widget="float_time"/>
+                <field name="time_cycle" widget="float_time"/>
+                <field name="std_labor"/>
+                <field name="std_overhead"/>
+                <field name="real_labor"/>
+                <field name="real_overhead"/>
+            </field>
+	    </field>
+    </record>
+
+    <record id="mrp_routing_workcenter_cycle_tree_view" model="ir.ui.view">
+        <field name="name">mrp.routing.workcenter.cycle.tree</field>
+        <field name="model">mrp.routing.workcenter</field>
+        <field name="inherit_id" ref="mrp.mrp_routing_workcenter_tree_view" />
+        <field name="arch" type="xml">
+            <field name="time_cycle" position="before">
+                <field name='time_cycle_std' widget='float_time'/>
+                <field name="time_cycle_manual" widget="float_time"/>
+            </field>
             <field name="time_cycle" position="after">
-                <field name="cycle_nbr"/>
-                <field name="hour_nbr"/>
+                <field name="std_labor"/>
+                <field name="std_overhead"/>
+                <field name="real_labor"/>
+                <field name="real_overhead"/>
             </field>
 	    </field>
     </record>

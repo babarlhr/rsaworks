@@ -68,18 +68,8 @@ class ProductTemplate(models.Model):
 
                 if bom.routing_id:
                     for wline in bom.routing_id.operation_ids:
-                        wc = wline.workcenter_id
-                        total_std_labor += wline.cycle_nbr * wc.costs_cycle + \
-                                           (wc.time_start + wc.time_stop +
-                                            wline.hour_nbr * wline.cycle_nbr) \
-                                           * wc.costs_hour
-                        total_std_overhead += (wc.time_start + wc.time_stop +
-                                               wline.hour_nbr * wline.cycle_nbr
-                                              ) * wc.overhead_cost_per_cycle
-                        total_std_labor = bom.product_uom_id._compute_price(
-                            total_std_labor, bom.product_id.uom_id)
-                        total_std_overhead = bom.product_uom_id._compute_price(
-                            total_std_overhead, bom.product_id.uom_id)
+                        total_std_labor += wline.std_labor
+                        total_std_overhead += wline.std_overhead
                 product.std_labor = float_round(
                     total_std_labor, precision_digits=precision)
                 product.std_overhead = float_round(
@@ -146,7 +136,8 @@ class ProductTemplate(models.Model):
                 self.categ_id.property_account_overhead_variance_categ_id,
             'overhead_absorption_acc_id':
                 self.property_account_overhead_absorp_id or
-                self.categ_id.property_account_overhead_absorp_categ_id
+                self.categ_id.property_account_overhead_absorp_categ_id,
+            'production_account_id': self.property_stock_production,
         })
         return accounts
 
@@ -160,13 +151,8 @@ class ProductProduct(models.Model):
         overhead_cost = 0
         precision = 4
         if bom.routing_id:
-            for wline in bom.routing_id.operation_ids:
-                wc = wline.workcenter_id
-                overhead_cost += \
-                    (wc.time_start + wc.time_stop + wline.hour_nbr *
-                     wline.cycle_nbr) * wc.overhead_cost_per_cycle
-                overhead_cost = bom.product_uom_id._compute_price(
-                    overhead_cost, bom.product_id.uom_id)
+            for wline in bom.routing_id.operation_ids:                
+                overhead_cost += wline.std_overhead
 
         # Convert on product UoM quantities
         if overhead_cost > 0:
