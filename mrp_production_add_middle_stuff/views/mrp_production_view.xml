@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="mrp_production_addition_form_view" model="ir.ui.view">
+        <field name="name">mrp.production.addition.form.view</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='move_raw_ids']" position="after">
+                    <button name="%(action_addition)d"
+                            type="action"
+                            states="confirmed,progress,planned"
+                            string="Add extra raw material"
+                            class="btn-primary"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

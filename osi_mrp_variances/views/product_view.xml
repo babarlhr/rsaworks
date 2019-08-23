@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<odoo>
+<!-- Copyright 2019 Open Source Integrators
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+
+    <record id="product_template_variance_account_form_view" model="ir.ui.view">
+        <field name="name">product.template.form.inherit.variance</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <group name="accounting" position="inside">
+                <group name="variance_properties" string="Variance Accounts" groups="account.group_account_user">
+                    <field name="property_account_material_variance_id"/>
+                    <field name="property_account_labor_variance_id"/>
+                    <field name="property_account_overhead_variance_id"/>
+                </group>
+                <group name="absorption_properties" string="Absorption Accounts" groups="account.group_account_user">
+                    <field name="property_account_manufacturing_id"/>
+                    <field name="property_account_overhead_absorp_id"/>
+                </group>
+            </group>
+        </field>
+    </record>
+
+    <record id="product_template_variance_form_view" model="ir.ui.view">
+        <field name="name">product.template.form.inherit.variance</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="stock_account.view_template_property_form"/>
+        <field name="arch" type="xml">
+            <field name="cost_method" position="after">
+                <field name="std_material" string="Std Material"/>
+                <field name="std_labor" string="Std Labor"/>
+                <field name="std_overhead" string="Std Overhead"/>
+            </field>
+        </field>
+    </record>
+   
+    <record id="view_product_category_form" model="ir.ui.view">
+        <field name="name">product.category.property.form.inherit.variance</field>
+        <field name="model">product.category</field>
+        <field name="inherit_id" ref="account.view_category_property_form"/>
+        <field name="arch" type="xml">
+            <group name="account_property" position="inside">
+                <group name="variances" string="Variance Accounts" colspan="2">
+                    <field name="property_account_material_variance_categ_id"/>
+                    <field name="property_account_labor_variance_categ_id"/>                            
+                    <field name="property_account_overhead_variance_categ_id" />
+                </group>
+                <group name="absorption_properties" string="Absorption Accounts" colspan="2">
+                    <field name="property_account_manufacturing_categ_id"/>                			
+                    <field name="property_account_overhead_absorp_categ_id" />
+                </group>
+            </group>
+        </field>
+    </record>
+    
+</odoo>
