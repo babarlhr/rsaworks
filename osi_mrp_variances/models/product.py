@@ -137,7 +137,8 @@ class ProductTemplate(models.Model):
             'overhead_absorption_acc_id':
                 self.property_account_overhead_absorp_id or
                 self.categ_id.property_account_overhead_absorp_categ_id,
-            'production_account_id': self.property_stock_production,
+            'production_account_id': self.property_stock_production and
+            self.property_stock_production.valuation_in_account_id,
         })
         return accounts
 

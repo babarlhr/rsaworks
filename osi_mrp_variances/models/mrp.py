@@ -395,6 +395,7 @@ class MRPWorkorder(models.Model):
             # create default entry
             if not workorder.add_consumption:
                 workorder._create_wo_start_account_move()
+                continue
             
             # Calculate valuation_amount
             product = workorder.product_id
@@ -490,7 +491,7 @@ class MRPWorkorder(models.Model):
         else:
             debit_account_id = self.production_id.routing_id.location_id.valuation_in_account_id.id or False
             if not debit_account_id:
-                debit_account_id = self.product.property_stock_production.valuation_in_account_id.id or False
+                debit_account_id = self.product_id.property_stock_production.valuation_in_account_id.id or False
 
         # Prepare accounts
         accounts = self.product_id.product_tmpl_id.get_product_accounts()
@@ -528,7 +529,7 @@ class MRPWorkorder(models.Model):
 
         credit_account_id = accounts['overhead_absorption_acc_id'] and accounts['overhead_absorption_acc_id'].id or False
         if not debit_account_id or not credit_account_id:
-            raise UserError(_("It seems Overhead Absorption Account for product %s is not set. Which means there is probably a configuration error") % (self.product.name,))
+            raise UserError(_("It seems Overhead Absorption Account for product %s is not set. Which means there is probably a configuration error") % (self.product_id.name,))
             
         # Create data for account move and post them
         name = self.production_id.name + '-' + 'Std Overhead::' + self.name
@@ -698,7 +699,7 @@ class MRPProduction(models.Model):
         """
         production_cost = ovh_cost = labor_cost = mtl_cost = 0.0
         if consumed_moves:
-            mtl_cost = super(MRPProduction, self)._cal_price(consumed_moves)
+            mtl_cost = sum([-m.value for m in consumed_moves])
             
         for workorder in self.workorder_ids:
             labor_cost += workorder.real_labor
