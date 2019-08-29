@@ -101,7 +101,7 @@ class AttendanceReport(models.Model):
                 LEFT JOIN resource_calendar c ON c.id = b.resource_calendar_id
                 LEFT JOIN ssi_resource_overtime o ON o.id = c.overtime_rule
             WHERE
-                o.id = 2
+                o.id >= 2
             GROUP BY
                 overtime_group, employee_id, employee_badge, department, shift, begin_date, week_no, start_hours, c.overtime_eligible
         """
@@ -138,28 +138,67 @@ class AttendanceReport(models.Model):
                 emp_id = att.employee_badge if att.employee_badge else ''
                 hours = att.hours if att.hours else 0
                 overtime = att.over_time if att.over_time else 0
-                overtime_group = 'OT' if 'Regular' in att.overtime_group else att.overtime_group
+                straight = att.straight_time if att.straight_time else 0
+                doubletime = att.double_time if att.double_time else 0
+                overtime_group = att.overtime_group if att.overtime_group else 0
 
                 # Regular Time
                 data = [
                     emp_id,
                     'E',
                     'REG',
-                    str(hours),
+                    str(straight),
                 ]
                 csv_row = u'","'.join(data)
                 csv += u"\"{}\"\n".format(csv_row)
 
                 # Over Time
-                if att.over_time:
-                    data = [
-                        emp_id,
-                        'E',
-                        overtime_group,
-                        str(overtime),
-                    ]
-                    csv_row = u'","'.join(data)
-                    csv += u"\"{}\"\n".format(csv_row)
+                if overtime_group == 'Regular':
+                    if att.over_time:
+                        data = [
+                            emp_id,
+                            'E',
+                            'OT',
+                            str(overtime),
+                        ]
+                        csv_row = u'","'.join(data)
+                        csv += u"\"{}\"\n".format(csv_row)
+                        if doubletime:
+                            data = [
+                                emp_id,
+                                'E',
+                                'DT',
+                                str(doubletime),
+                            ]
+                            csv_row = u'","'.join(data)
+                            csv += u"\"{}\"\n".format(csv_row)
+                else:
+                    if att.over_time:
+                        data = [
+                            emp_id,
+                            'E',
+                            overtime_group,
+                            '4',
+                        ]
+                        csv_row = u'","'.join(data)
+                        csv += u"\"{}\"\n".format(csv_row)
+                        data = [
+                            emp_id,
+                            'E',
+                            'OT',
+                            str(overtime),
+                        ]
+                        csv_row = u'","'.join(data)
+                        csv += u"\"{}\"\n".format(csv_row)
+                        if doubletime:
+                            data = [
+                                emp_id,
+                                'E',
+                                'DT',
+                                str(doubletime),
+                            ]
+                            csv_row = u'","'.join(data)
+                            csv += u"\"{}\"\n".format(csv_row)
 
         return csv
 

@@ -74,6 +74,7 @@
                         <field name="hours"/>
                         <field name="straight_time"/>
                         <field name="over_time"/>
+                        <field name="double_time"/>
                     </group>
                 </group>
             </sheet>
