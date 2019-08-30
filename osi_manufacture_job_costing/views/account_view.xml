@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<odoo>
+<!-- Copyright 2019 Open Source Integrators
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
+
+    <record id="account_analytic_line_workcenter_form" model="ir.ui.view">
+        <field name="name">analytic.analytic.line.workcenter.form</field>
+        <field name="model">account.analytic.line</field>
+        <field name="inherit_id" ref="analytic.view_account_analytic_line_form"/>
+        <field name="arch" type="xml">
+            <field name="account_id" position="after">
+                <field name="workcenter_id"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="account_analytic_line_workcenter_tree" model="ir.ui.view">
+        <field name="name">analytic.analytic.line.workcenter.tree</field>
+        <field name="model">account.analytic.line</field>
+        <field name="inherit_id" ref="analytic.view_account_analytic_line_tree"/>
+        <field name="arch" type="xml">
+            <field name="account_id" position="after">
+                <field name="workcenter_id"/>
+            </field>
+        </field>
+    </record>
+    
+    <record id="account_move_line_workcenter_tree" model="ir.ui.view">
+        <field name="name">account.move.line.workcenter.tree</field>
+        <field name="model">account.move.line</field>
+        <field name="inherit_id" ref="account.view_move_line_tree"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="workcenter_id"/>
+            </field>
+        </field>
+    </record>
+    
+    <record id="account_move_line_workcenter_form" model="ir.ui.view">
+        <field name="name">account.move.line.workcenter.form</field>
+        <field name="model">account.move.line</field>
+        <field name="inherit_id" ref="account.view_move_line_form"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="workcenter_id"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="account_move_workcenter_form" model="ir.ui.view">
+        <field name="name">account.move.workcenter.form</field>
+        <field name="model">account.move.line</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <field name="analytic_account_id" position="after">
+                <field name="workcenter_id"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

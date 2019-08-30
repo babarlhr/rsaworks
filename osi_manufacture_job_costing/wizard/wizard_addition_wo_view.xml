@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="view_create_wo_addition" model="ir.ui.view">
+        <field name="name">view.wiz.wo.addition</field>
+        <field name="model">wiz.wo.addition</field>
+        <field name="type">form</field>
+        <field name="arch" type="xml">
+            <form>
+                <group string="Add Extra Workorder">
+                    <field name="wo_addition_lines" nolabel="1">
+                    	<tree create="false" editable="top">
+                    		<field name="is_select"/>
+                    		<field name="workorder_id"/>
+                    		<field name="new_workorder_name" attrs="{'required':[('is_select','=',True)]}"/>
+                    		<field name="rework_qty"/>
+                    	</tree>
+                    </field>
+                </group>
+                <footer>
+                    <button class="btn-primary" 
+                    name="add_workorder"
+                    string="Add"
+                    type="object" />
+                    or
+                    <button class="btn-default" 
+                    special="cancel"
+                    string="Cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_wo_addition" model="ir.actions.act_window">
+        <field name="name">Addition WO View</field>
+        <field name="res_model">wiz.wo.addition</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_create_wo_addition" />
+        <field name="target">new</field>
+    </record>
+</odoo>
