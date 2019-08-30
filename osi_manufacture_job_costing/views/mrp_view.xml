@@ -20,7 +20,7 @@
                         </tree>
                     </field>
                     <group col="2" colspan="2">
-                        <button name="%(osi_mrp_variances.action_wo_addition)d"
+                        <button name="%(osi_manufacture_job_costing.action_wo_addition)d"
                                 type="action"
                                 states="confirmed,planned,progress"
                                 string="Add extra Workorder"
@@ -30,7 +30,7 @@
             </xpath>
             <xpath expr="//page[1]" position="inside">
                 <group col="2" colspan="2">
-                    <button name="%(osi_mrp_variances.action_product_remove)d"
+                    <button name="%(osi_manufacture_job_costing.action_product_remove)d"
                             type="action"
                             states="confirmed,planned,progress"
                             string="Remove Materials"
@@ -50,7 +50,7 @@
                 <attribute name="invisible">0</attribute>
             </xpath>
             <xpath expr="//field[@name='move_raw_ids']/tree/field[@name='quantity_done']" position="after">
-                <button name="%(osi_mrp_variances.action_update_stock_move_src_location)d"
+                <button name="%(osi_manufacture_job_costing.action_update_stock_move_src_location)d"
                         type="action"
                         states="draft,waiting,confirmed,assigned"
                         string="Update Source Location"
