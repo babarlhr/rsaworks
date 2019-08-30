@@ -112,10 +112,13 @@
                                 </group>
 									<field name="storage_ids" context="{'default_equipment_id':active_id,'default_check_in':time.strftime('%Y-%m-%d %H:%M:%S')}"> 
                                       <tree string="storage" create="true" edit="true">
-                                        <field name="location_id"/>
-                                        <field name="check_in"/>
-                                        <field name="check_out"/>
-                                        <field name="status"/>
+                                          <field name="equipment_id"/>
+                                          <field name="location_id"/>
+                                          <field name="check_in"/>
+                                          <field name="check_out"/>
+                                          <field name="subscription_id"/>
+                                          <field name="subscription_price"/>
+                                          <field name="last_invoiced"/>
                                       </tree>
                                     </field>
 
@@ -176,30 +179,35 @@
             </field>
         </record>
 
-        <record model="ir.ui.view" id="storage_form_view">
-          <field name="name">storage.form</field>
-          <field name="model">storage</field>
-          <field name="arch" type="xml">
-              <form string="Storage Form">
-                  <sheet>
-                      <group>
-                          <group>
+        <record id="ssi_equipment_storage_form" model="ir.ui.view">
+        <field name="name">ssi.equipment_storage_form</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="inherit_id" ref="maintenance.hr_equipment_view_form"/>
+        <field eval="30" name="sequence"/>
+        <field name="type">form</field>
+            <field name="arch" type="xml">
+              <xpath expr="//field[@name='storage_ids']" position="inside">
+                <form string="Storage Form">
+                              <sheet>
+                                  <group>
+                                      <group>
 
-                              <field name="location_id"/>
-                              <field name="equipment_id" context="{'equipment_id':context.get('id')}"/>
-                              <field name="status"/>
-                          </group>
-                          <group>
-                              <field name="check_in"/>
-                              <field name="check_out"/>
-                          </group>
-                      </group>
-                  </sheet>
-              </form>
-          </field>
-      </record>
-
-
+                                          <field name="location_id"/>
+                                          <field name="equipment_id" context="{'equipment_id':context.get('id')}"/>
+                                          <field name="check_in"/>
+                                          <field name="check_out"/>
+                                      </group>
+                                      <group>
+                                          <field name="subscription_id"/>
+                                          <field name="subscription_price"/>
+                                          <field name="last_invoiced"/>
+                                      </group>
+                                  </group>
+                              </sheet>
+                          </form>
+              </xpath>
+            </field>
+        </record>
 
         <record id="ssi_jobs_tree_equipment" model="ir.ui.view">
             <field name="name">ssi_jobs_tree_equipment.tree</field>

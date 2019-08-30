@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<odoo>
+  <record id="ssi_budget_line_view" model="ir.ui.view">
+      <field name="name">ssi_budget_line_view</field>
+      <field name="model">crossovered.budget</field>
+      <field name="inherit_id" ref="account_budget.crossovered_budget_view_form"/>
+      <field name="type">form</field>
+      <field name="arch" type="xml">
+            <xpath expr="//field[@name='practical_amount']" position="after">
+                <field name="remaining_amount"/>
+            </xpath>
+      </field>
+  </record>
+
+</odoo>

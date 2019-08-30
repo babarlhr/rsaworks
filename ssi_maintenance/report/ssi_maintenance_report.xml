@@ -3,7 +3,7 @@
 <odoo>
     <data>                
 
-        <report
+        <!-- report
             id="ssi_maintenance_logistics_report"
             model="maintenance.request"
             string="Logistic Ticket"
@@ -131,7 +131,7 @@
             <t t-foreach="docs" t-as="o">
                 <t t-call="ssi_maintenance.ssi_maintenance_logistics_document"/>
             </t>
-        </template>
+        </template -->
 
     </data>
 </odoo>

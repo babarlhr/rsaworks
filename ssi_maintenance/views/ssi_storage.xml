@@ -10,10 +10,37 @@
               <field name="location_id"/>
               <field name="check_in"/>
               <field name="check_out"/>
-              <field name="status"/>
+              <field name="subscription_id"/>
+              <field name="subscription_price"/>
+              <field name="last_invoiced"/>
           </tree>
       </field>
   </record>
+
+        <record model="ir.ui.view" id="storage_form_view">
+          <field name="name">storage.form</field>
+          <field name="model">storage</field>
+          <field name="arch" type="xml">
+              <form string="Storage Form">
+                  <sheet>
+                      <group>
+                          <group>
+
+                              <field name="location_id"/>
+                              <field name="equipment_id" context="{'equipment_id':context.get('id')}"/>
+                              <field name="check_in"/>
+                              <field name="check_out"/>
+                          </group>
+                          <group>
+                              <field name="subscription_id"/>
+                              <field name="subscription_price"/>
+                              <field name="last_invoiced"/>
+                          </group>
+                      </group>
+                  </sheet>
+              </form>
+          </field>
+      </record>
 
   <!-- FOR DASHBOARD TO WORK DONT FORGET TO INSTALL DASHBOARD MODULE -->
   <record id="storage_action" model="ir.actions.act_window">

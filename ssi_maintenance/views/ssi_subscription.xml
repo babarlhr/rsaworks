@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<odoo>
+  <record id="ssi_subscription_storage_view" model="ir.ui.view">
+      <field name="name">ssi_subscription_storage_view</field>
+      <field name="model">sale.subscription</field>
+      <field name="inherit_id" ref="sale_subscription.sale_subscription_view_form"/>
+      <field name="type">form</field>
+      <field name="arch" type="xml">
+		  <xpath expr="//form[1]/sheet[1]/div[not(@name)][3]/notebook[1]" position="inside">
+			<page name="Storage" string="Storage">
+			  <group>
+				<field name="storage_id">
+				  <tree>
+					  <field name="equipment_id"/>
+					  <field name="location_id"/>
+					  <field name="check_in"/>
+					  <field name="check_out"/>
+					  <field name="equip_square_feet"/>
+					  <field name="subscription_price"/>
+					  <field name="last_invoiced"/>
+				  </tree>
+				</field>
+                <group class="oe_subtotal_footer oe_right">
+                    <field name="square_foot_total" class="oe_subtotal_footer_separator" modifiers="{'readonly': true}"/>
+                </group>
+			  </group>
+			</page>
+		  </xpath>
+          <xpath expr="//button[@name='action_open_sales']" position="after">
+              <button name="ssi_update_lines" type="object" class="oe_stat_button" icon="fa-refresh" string="Update Lines"/>
+          </xpath>
+      </field>
+  </record>
+
+</odoo>
