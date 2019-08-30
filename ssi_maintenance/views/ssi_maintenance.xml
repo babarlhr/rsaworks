@@ -118,7 +118,7 @@
                                           <field name="check_out"/>
                                           <field name="subscription_id"/>
                                           <field name="subscription_price"/>
-                                          <field name="last_invoiced"/>
+                                          <field name="last_invoiced" readonly="1"/>
                                       </tree>
                                     </field>
 
@@ -193,14 +193,14 @@
                                       <group>
 
                                           <field name="location_id"/>
-                                          <field name="equipment_id" context="{'equipment_id':context.get('id')}"/>
+                                          <field name="equipment_id" context="{'equipment_id':context.get('id')}"  attrs="{'invisible':1}"/>
                                           <field name="check_in"/>
                                           <field name="check_out"/>
                                       </group>
                                       <group>
                                           <field name="subscription_id"/>
                                           <field name="subscription_price"/>
-                                          <field name="last_invoiced"/>
+                                          <field name="last_invoiced" readonly="1"/>
                                       </group>
                                   </group>
                               </sheet>

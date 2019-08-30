@@ -37,11 +37,12 @@ class SaleSubscription(models.Model):
         # Update subsctiption lines
         self.wipe()
         lines = []
+        product =  self.env['product.product'].search([('default_code', '=', 'Storage Fee')], limit=1)
         for strg in self.storage_id:
             if not strg.check_out or strg.check_out.date() > strg.last_invoiced:
                 line_name = '%s (%s)' % (strg.equipment_id.name, strg.equip_serial_no)
                 vals = {
-                    "product_id": 1680,
+                    "product_id": product.id,
                     "name": line_name,
                     "quantity": strg.equip_square_feet,
                     "price_unit":  strg.subscription_price
