@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="ssi_mrp_production_tree">
+          <field name="name">ssi_mrp_production_tree</field>
+          <field name="model">mrp.production</field>
+          <field name="inherit_id" ref="mrp.mrp_production_tree_view"/>
+          <field name="type">tree</field>
+          <field name="arch" type="xml">
+            <xpath expr="//tree[1]/field[@name='name']" position="before">
+              <field name="ssi_job_id"/>
+            </xpath>
+          </field>
+      </record>
+
+
+      <record model="ir.ui.view" id="ssi_mrp_production_form">
+          <field name="name">ssi_mrp_production_form</field>
+          <field name="model">mrp.production</field>
+          <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+          <field name="type">form</field>
+          <field name="arch" type="xml">
+			  <xpath expr="//field[@name='origin']" position="after">
+				<field name="ssi_job_id"/>
+			  </xpath>
+		  </field>
+      </record>
+
+    </data>
+</odoo>
+
