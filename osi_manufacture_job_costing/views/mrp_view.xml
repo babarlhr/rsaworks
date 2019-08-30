@@ -69,6 +69,8 @@
             </field>
             <xpath expr="//page[3]/group" postion="after">
                 <group string="Labor Costs">
+                    <button name="rollup_costs" string="Update Cost" type="object"
+                        class="oe_link oe_read_only"/>
             		<field name="labor_cost"/>
             		<field name="burden_cost"/>
             		<field name="total_cost"/>

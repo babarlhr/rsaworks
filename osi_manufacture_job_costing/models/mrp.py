@@ -75,15 +75,16 @@ class MRPWorkorder(models.Model):
                 labor_total += labor
                 burden_total += burden
                 
-                value = cost_dict.get(time_rec.date, False)
+                date = time_rec.date_end
+                value = cost_dict.get(date, False)
                 value_labor = value and value[0]
                 value_burden = value and value[1]
                 
                 if existing_value:
-                    cost_dict[time_rec.date].update((value_labor + labor, value_burden + burden))
+                    cost_dict[date].update((value_labor + labor, value_burden + burden))
                     
                 else:
-                    cost_dict[time_rec.date] = (labor, burden)
+                    cost_dict[date] = (labor, burden)
                 
                 time_rec.update({'cost_already_recorded': True})
                     
