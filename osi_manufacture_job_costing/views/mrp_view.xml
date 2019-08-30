@@ -17,7 +17,6 @@
                             <field name="date_planned_start" invisible="1"/>
                             <field name="rework_qty" attrs="{'invisible':[('add_consumption','=',False)], 'readonly':[('state','not in', ['draft','ready'])]}"/>
                             <field name="workcenter_id"/>
-                            <field name="state"/>
                         </tree>
                     </field>
                     <group col="2" colspan="2">

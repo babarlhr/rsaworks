@@ -3,8 +3,8 @@
 
 from odoo import models, fields
 
-class AnalyticAccount(models.Model):
-    _inherit = 'account.analytic.account'
+class AnalyticAccountLine(models.Model):
+    _inherit = 'account.analytic.line'
 
     workcenter_id = fields.Many2one('mrp.workcenter', string='Workcenter')
 
