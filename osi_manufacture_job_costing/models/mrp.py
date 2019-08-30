@@ -221,7 +221,7 @@ class MRPProduction(models.Model):
                 
             # Compute Std material
             for bom_line in production.bom_id.bom_line_ids:
-                new_qty = bom_line.product_qty / bom_line.product_efficiency
+                new_qty = bom_line.product_qty
                 material_cost += production.company_id.currency_id.round(
                     bom_line.product_id.uom_id._compute_price(
                         bom_line.product_id.standard_price,
