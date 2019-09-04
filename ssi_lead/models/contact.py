@@ -4,6 +4,10 @@ from odoo import api, fields, models, tools, _
 class Contact(models.Model):
     _inherit = 'res.partner'
 
+    fax = fields.Char(string='Fax')
+    opened_date = fields.Date(string='Opened Date')
+    vendor_1099 = fields.Boolean(string='Vendor 1099')
+
     # I) CONTACTS
     # 1 FOCUS
     c_contact_fits_our_ideal_customer_group = fields.Boolean(string='Contact Fits Our Ideal Customer Group')
