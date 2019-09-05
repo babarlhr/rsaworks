@@ -9,7 +9,7 @@
         <form string="Jobs">
             <header>
                 <button name="ssi_jobs_new_mrp_prod_button" type="object" class="oe_stat_button" icon="fa-wrench" string="Start Job"/>
-                <button name="ssi_jobs_new_so_button" type="object" class="oe_stat_button" icon="fa-dollar" string="Create Estimate" context="{'default_partner_id': partner_id, 'default_ssi_jobs': active_id,'default_analytic_account_id': aa_id}"/>
+                <button name="ssi_jobs_new_so_button" type="object" class="oe_stat_button" icon="fa-dollar" string="Create Estimate" context="{'default_partner_id': partner_id, 'default_ssi_job_id': active_id,'default_analytic_account_id': aa_id}"/>
                 <button name="ssi_jobs_new_po_button" type="object" class="oe_stat_button" icon="fa-credit-card" string="Order Parts" context="{'default_ssi_jobs': active_id}"/>
                 <field name="stage_id" options="{'clickable': '1'}" widget="statusbar"/>
             </header>
@@ -318,7 +318,7 @@
 </record>
 
 
-<record id="ssi_ai_tree" model="ir.ui.view">
+<!-- record id="ssi_ai_tree" model="ir.ui.view">
     <field name="name">ssi_ai.tree</field>
     <field name="model">account.invoice</field>
     <field name="arch" type="xml">
@@ -336,7 +336,7 @@
             <field name="state"/>
         </tree>
     </field>
-</record>
+</record -->
 
 
 <record id="sale_order_ai_line_action" model="ir.actions.act_window">

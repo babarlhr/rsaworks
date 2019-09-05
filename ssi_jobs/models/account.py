@@ -12,7 +12,6 @@ class AA(models.Model):
     #     'sale.order', string='Job')
 
 class AI(models.Model):
-    _inherit = 'account.invoice'
+    _inherit = 'account.invoice.line'
 
-    ssi_job_id = fields.Many2one(
-        'ssi_jobs', string='Job')
+    ssi_job_id = fields.Many2one('ssi_jobs', related='account_analytic_id.ssi_job_id', string='Job', store=True)
