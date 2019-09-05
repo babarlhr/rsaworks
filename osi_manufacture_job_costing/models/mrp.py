@@ -131,11 +131,11 @@ class MRPWorkorder(models.Model):
 
             wc = wo.workcenter_id
 
-            # labor and burden rates            
-            labor_rate = wc.costs_hour
+            # labor and burden rates
+            labor_rate = wc.costs_hour / 60
             
             if wc.burden_type == 'rate':
-                burden_rate = wc.burden_costs_hour
+                burden_rate = wc.burden_costs_hour/60
             elif wc.burden_type == 'percent':
                 burden_rate = labor_rate * wc.burden_costs_percent / 100
         
