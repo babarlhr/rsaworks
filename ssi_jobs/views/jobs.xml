@@ -339,7 +339,7 @@
 </record -->
 
 
-<record id="sale_order_ai_line_action" model="ir.actions.act_window">
+<!-- record id="sale_order_ai_line_action" model="ir.actions.act_window">
   <field name="auto_search" eval="True"/>
   <field name="binding_model_id" eval="False"/>
   <field name="binding_type">action</field>
@@ -360,7 +360,7 @@
   <field name="view_id" ref="ssi_ai_tree"/>
   <field name="view_mode">tree,form</field>
   <field name="view_type">form</field>
-</record>
+</record -->
 
 <record id="ssi_prod_tree" model="ir.ui.view">
     <field name="name">ssi_prod.tree</field>

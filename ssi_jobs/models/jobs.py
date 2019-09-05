@@ -184,7 +184,7 @@ class Jobs(models.Model):
 
     @api.depends('order_total')
     def _get_ai_count(self):
-        results = self.env['account.invoice'].read_group(
+        results = self.env['account.invoice.line'].read_group(
             [('ssi_job_id', 'in', self.ids)], 'ssi_job_id', 'ssi_job_id')
         dic = {}
         for x in results:
