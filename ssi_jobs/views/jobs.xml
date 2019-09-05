@@ -116,6 +116,7 @@
 
                         <div class="o_kanban_card_content">
                             <field bold="True" name="name" modifiers="{}"/>
+                            <field name="notes" display="full"/>
                             <field name="partner_id" display="full"/>
                             <!-- <field name="size"/>
                             <field name="sizeUM"/> -->
