@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="ssi_invoice_line_tree">
+          <field name="name">ssi_invoice_line_tree</field>
+          <field name="model">account.invoice</field>
+          <field name="inherit_id" ref="account.invoice_form"/>
+          <field name="type">tree</field>
+          <field name="arch" type="xml">
+              <xpath expr="//form[1]/sheet[1]/notebook[1]/page[1]/field[@name='invoice_line_ids']/tree[1]/field[@name='account_analytic_id']" position="after">
+                <field name="ssi_job_id"/>
+              </xpath>
+          </field>
+      </record>
+
+
+      <record model="ir.ui.view" id="ssi_invoice_line_form">
+          <field name="name">ssi_invoice_line_form</field>
+          <field name="model">account.invoice</field>
+          <field name="inherit_id" ref="account.invoice_form"/>
+          <field name="type">form</field>
+          <field name="arch" type="xml">
+              <xpath expr="//form[1]/sheet[1]/notebook[1]/page[1]/field[@name='invoice_line_ids']/kanban[1]" position="after">
+                <form>
+                  <field name="display_type" invisible="1"/>
+                  <!--
+                                    We need the sequence field to be here for new lines to be added at the correct position.
+                                    TODO: at some point we want to fix this in the framework so that an invisible field is not required.
+                                -->
+                  <field name="sequence" invisible="1"/>
+                  <group attrs="{'invisible': [('display_type', '!=', False)]}" name="studio_group_a2fa7a">
+                    <group name="studio_group_843aae">
+                      <field name="partner_id" invisible="1"/>
+                      <field name="invoice_type" invisible="1"/>
+                      <field name="company_id" invisible="1"/>
+                      <field name="product_id" context="{'partner_id': partner_id}"/>
+                      <label for="quantity"/>
+                      <div name="studio_div_4e63a5">
+                        <field name="quantity" class="oe_inline"/>
+                        <field name="uom_id" class="oe_inline" groups="uom.group_uom"/>
+                      </div>
+                      <field name="price_unit"/>
+                      <field name="discount" groups="sale.group_discount_per_so_line"/>
+                      <field name="ssi_job_id"/>
+                      <field name="currency_id" invisible="1"/>
+                    </group>
+                    <group name="studio_group_a46281">
+                      <field name="analytic_tag_ids" groups="analytic.group_analytic_accounting" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                      <field name="purchase_id" invisible="context.get('type') in ('out_invoice', 'out_refund')"/>
+                      <field domain="[('company_id', '=', company_id)]" name="account_id" groups="account.group_account_user"/>
+                      <!-- field name="subscription_id"/ -->
+                      <field name="asset_category_id" domain="[('type','=','sale')]" string="Deferred Revenue Type"/>
+                      <field name="invoice_line_tax_ids" context="{'type': invoice_type}" domain="[('type_tax_use','!=','none'),('company_id', '=', company_id)]" widget="many2many_tags" options="{'no_create': True}"/>
+                      <field domain="[('company_id', '=', company_id)]" name="account_analytic_id" groups="analytic.group_analytic_accounting"/>
+                      <field name="analytic_tag_ids" widget="many2many_tags" groups="analytic.group_analytic_tags"/>
+                      <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                    </group>
+                  </group>
+                  <label for="name" string="Description" attrs="{'invisible': [('display_type', '!=', False)]}"/>
+                  <label for="name" string="Section" attrs="{'invisible': [('display_type', '!=', 'line_section')]}"/>
+                  <label for="name" string="Note" attrs="{'invisible': [('display_type', '!=', 'line_note')]}"/>
+                  <field name="name"/>
+                </form>
+              </xpath>
+          </field>
+      </record>
+
+    </data>
+</odoo>
+
