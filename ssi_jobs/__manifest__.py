@@ -16,14 +16,12 @@
     "depends":  [
         'base',
         'account',
-        'base',
         'mrp',
         'mrp_workorder',
         'product',
         'purchase',
         'sale',
         'stock',
-        'sale_timesheet',
         'mail'
     ],
     'data': [

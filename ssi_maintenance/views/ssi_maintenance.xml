@@ -38,8 +38,8 @@
                             <field name="bearing_type"/>
                             <field name="de_bearing"/>
                             <field name="ode_bearing"/>
-                            <field name="customer_id_number"/>
                             <field name="customer_id_number_general"/>
+                            <field name="customer_id_number"/>
                             <field name="customer_id_number_motor_specific"/>
                             <field name="ui_rated"/>
                             <field name="ui_rating"/>

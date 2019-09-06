@@ -15,6 +15,7 @@
     "website":  "https://ssibtr.com",
     "depends":  [
         'hr_attendance',
+#         'hr_leave',
         'mrp',
         'ssi_jobs'
     ],

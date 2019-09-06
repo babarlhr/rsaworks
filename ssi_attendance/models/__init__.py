@@ -4,4 +4,5 @@
 from . import attendance
 from . import attendanceReport
 from . import employee
+from . import leaves
 # from . import wo
