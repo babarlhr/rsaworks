@@ -21,6 +21,18 @@ class ProductCategory(models.Model):
         help="This account will be used for Overhead Absorption on work orders"
     )
 
+    property_account_labor_wip_categ_id = fields.Many2one(
+        'account.account',
+        company_dependent=True,
+        string='Labor WIP Account',
+        help="This account will be used for Labor absorption on work orders"
+    )
+    property_account_overhead_wip_categ_id = fields.Many2one(
+        'account.account',
+        company_dependent=True,
+        string='Labor Burden WIP Account',
+        help="This account will be used for Overhead Absorption on work orders"
+    )
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
@@ -34,6 +46,19 @@ class ProductTemplate(models.Model):
         'account.account',
         company_dependent=True,
         string='Labor Burden Account',
+        help="This account will be used for Overhead Absorption on work orders."
+    )
+
+    property_account_labor_wip_id = fields.Many2one(
+        'account.account',
+        company_dependent=True,
+        string='Labor WIP Account',
+        help="This account will be used for Labor absorption on work orders"
+    )
+    property_account_overhead_wip_id = fields.Many2one(
+        'account.account',
+        company_dependent=True,
+        string='Labor Burden WIP Account',
         help="This account will be used for Overhead Absorption on work orders."
     )
 
@@ -51,5 +76,11 @@ class ProductTemplate(models.Model):
                 self.categ_id.property_account_overhead_absorp_categ_id,
             'production_account_id': self.property_stock_production and
             self.property_stock_production.valuation_in_account_id,
+            'labor_wip_acc_id':
+                self.property_account_labor_wip_id or
+                self.categ_id.property_account_labor_wip_categ_id,
+            'overhead_wip_acc_id':
+                self.property_account_overhead_wip_id or
+                self.categ_id.property_account_overhead_wip_categ_id,            
         })
         return accounts

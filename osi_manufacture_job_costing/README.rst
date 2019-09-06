@@ -17,7 +17,7 @@ Configuration
 =============
 
 * Go to Inventory > Configuration > Products > Product Categories
-* Create/edit product category with accounts for labor and overhead.
+* Create/edit product category with accounts for labor and overhead or burden.
 * Go to Manufacturing > Master Data > Work Centers
 * Create/edit work centers with labor rate, overhead rate
 
@@ -33,6 +33,7 @@ Usage
 * Process work order for the unprocessed time entries
 * It will create journal entries. If analytic account found at work center,
   it will create analytic entries as well.
+* It will create Job costing scheduler to calculate workorder costing on daily basis.
 
 Credits
 =======
