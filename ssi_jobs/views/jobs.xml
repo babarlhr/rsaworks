@@ -21,7 +21,7 @@
                     <button class="oe_stat_button" icon="fa-credit-card" type="object" name="action_view_po_count">
                     <field name="po_count" string="Purchase Orders" placeholder="Purchase Orders" widget="statinfo"/>
                     </button>
-                    <button class="oe_stat_button" icon="fa-file-o" type="object" name="action_view_ai_count">
+                    <button class="oe_stat_button" icon="fa-file-o"> <!-- type="object" name="action_view_ai_count" -->
                     <field name="ai_count" string="Vendor Bills" widget="statinfo"/>
                     </button>
 
@@ -318,7 +318,7 @@
 </record>
 
 
-<!-- record id="ssi_ai_tree" model="ir.ui.view">
+<record id="ssi_ai_tree" model="ir.ui.view">
     <field name="name">ssi_ai.tree</field>
     <field name="model">account.invoice</field>
     <field name="arch" type="xml">
@@ -336,7 +336,7 @@
             <field name="state"/>
         </tree>
     </field>
-</record -->
+</record>
 
 
 <!-- record id="sale_order_ai_line_action" model="ir.actions.act_window">
@@ -429,7 +429,7 @@
 </record>
 
 
-<record id="sale_order_aa_line_action" model="ir.actions.act_window">
+<!-- record id="sale_order_aa_line_action" model="ir.actions.act_window">
   <field name="auto_search" eval="True"/>
   <field name="binding_model_id" eval="False"/>
   <field name="binding_type">action</field>
@@ -450,7 +450,7 @@
   <field name="view_id" ref="ssi_prod_tree"/>
   <field name="view_mode">tree,form</field>
   <field name="view_type">form</field>
-</record>
+</record -->
 
 
 
@@ -485,7 +485,7 @@
   <field name="help" eval="False"/>
   <field name="limit">80</field>
   <field name="multi" eval="False"/>
-  <field name="name">Vendor Bills</field>
+  <field name="name">Work Orders</field>
   <field name="res_model">mrp.workorder</field>
   <field name="search_view_id" eval="False"/>
   <field name="src_model" eval="False"/>
@@ -507,6 +507,7 @@
             <field name="workcenter_id"/>
             <field name="user_id"/>
             <field name="loss_id"/>
+            <field name="cost_already_recorded"/>
             <field name="duration"/>
         </tree>
     </field>
@@ -523,7 +524,7 @@
   <field name="help" eval="False"/>
   <field name="limit">80</field>
   <field name="multi" eval="False"/>
-  <field name="name">Vendor Bills</field>
+  <field name="name">Timesheets</field>
   <field name="res_model">mrp.workcenter.productivity</field>
   <field name="search_view_id" eval="False"/>
   <field name="src_model" eval="False"/>

@@ -64,9 +64,9 @@ class Jobs(models.Model):
     color = fields.Integer(string='Color')
     serial = fields.Char(String="Serial #")
     aa_id = fields.Many2one(
-        'account.analytic.account', string='Account Analytic')
-    aa_count = fields.Integer(
-        string='Analytics Count', compute='_get_aa_count')
+        'account.analytic.account', string='Analytic Account')
+#     aa_count = fields.Integer(
+#         string='Analytics Count', compute='_get_aa_count')
 
     _sql_constraints = [(
         'name_unique',
@@ -139,12 +139,12 @@ class Jobs(models.Model):
         action['domain'] = [('ssi_job_id', '=', self.id)]
         return action
 
-    @api.multi
-    def action_view_aa_count(self):
-        action = self.env.ref(
-            'ssi_jobs.sale_order_aa_line_action').read()[0]
-        action['domain'] = [('ssi_job_id', '=', self.id)]
-        return action
+#     @api.multi
+#     def action_view_aa_count(self):
+#         action = self.env.ref(
+#             'ssi_jobs.sale_order_aa_line_action').read()[0]
+#         action['domain'] = [('ssi_job_id', '=', self.id)]
+#         return action
 
     @api.multi
     def ssi_jobs_new_so_button(self):
@@ -226,13 +226,13 @@ class Jobs(models.Model):
             record.wc_count = dic.get(
                 record.id, 0)
 
-    @api.depends('order_total')
-    def _get_aa_count(self):
-        results = self.env['account.analytic.account'].read_group(
-            [('ssi_job_id', 'in', self.ids)], 'ssi_job_id', 'ssi_job_id')
-        dic = {}
-        for x in results:
-            dic[x['ssi_job_id'][0]] = x['ssi_job_id_count']
-        for record in self:
-            record.wc_count = dic.get(
-                record.id, 0)
+#     @api.depends('order_total')
+#     def _get_aa_count(self):
+#         results = self.env['account.analytic.account'].read_group(
+#             [('ssi_job_id', 'in', self.ids)], 'ssi_job_id', 'ssi_job_id')
+#         dic = {}
+#         for x in results:
+#             dic[x['ssi_job_id'][0]] = x['ssi_job_id_count']
+#         for record in self:
+#             record.wc_count = dic.get(
+#                 record.id, 0)
