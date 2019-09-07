@@ -33,6 +33,18 @@ class ProductCategory(models.Model):
         string='Labor Burden WIP Account',
         help="This account will be used for Overhead Absorption on work orders"
     )
+    property_account_cogs_material_categ_id = fields.Many2one(
+        'account.account',
+        company_dependent=True,
+        string='COGS Accounts (Material)',
+        help="This account will be used for COGS Accounts material on manufaturing orders."
+    )
+    property_account_cogs_labor_categ_id = fields.Many2one(
+        'account.account',
+        company_dependent=True,
+        string='COGS Accounts (Labor)',
+        help="This account will be used for COGS Accounts labor on manufaturing orders."
+    )
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
@@ -61,6 +73,18 @@ class ProductTemplate(models.Model):
         string='Labor Burden WIP Account',
         help="This account will be used for Overhead Absorption on work orders."
     )
+    property_account_cogs_material_id = fields.Many2one(
+        'account.account',
+        company_dependent=True,
+        string='COGS Accounts (Material)',
+        help="This account will be used for COGS Accounts material on manufaturing orders."
+    )
+    property_account_cogs_labor_id = fields.Many2one(
+        'account.account',
+        company_dependent=True,
+        string='COGS Accounts (Labor)',
+        help="This account will be used for COGS Accounts labor on manufaturing orders."
+    )
 
     @api.multi
     def _get_product_accounts(self):
@@ -81,6 +105,13 @@ class ProductTemplate(models.Model):
                 self.categ_id.property_account_labor_wip_categ_id,
             'overhead_wip_acc_id':
                 self.property_account_overhead_wip_id or
-                self.categ_id.property_account_overhead_wip_categ_id,            
+                self.categ_id.property_account_overhead_wip_categ_id,
+            'cogs_material_id':
+                self.property_account_cogs_material_id or
+                self.categ_id.property_account_cogs_material_categ_id,
+            'cogs_labor_id':
+                self.property_account_cogs_labor_id or
+                self.categ_id.property_account_cogs_labor_categ_id,
+
         })
         return accounts

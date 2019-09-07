@@ -9,11 +9,13 @@
         <field name="inherit_id" ref="product.product_template_form_view"/>
         <field name="arch" type="xml">
             <group name="accounting" position="inside">
-                <group name="absorption_properties" string="Labor Accounts" groups="account.group_account_user">
+                <group name="absorption_properties" string="Job Accounts" groups="account.group_account_user">
                     <field name="property_account_labor_absorp_id"/>
                     <field name="property_account_overhead_absorp_id"/>
                     <field name="property_account_labor_wip_id"/>
-                    <field name="property_account_overhead_wip_id"/>                    
+                    <field name="property_account_overhead_wip_id"/>
+                    <field name="property_account_cogs_material_id"/>
+                    <field name="property_account_cogs_labor_id"/>
                 </group>
             </group>
         </field>
@@ -25,11 +27,13 @@
         <field name="inherit_id" ref="account.view_category_property_form"/>
         <field name="arch" type="xml">
             <group name="account_property" position="inside">
-                <group name="absorption_properties" string="Labor Accounts" colspan="2">
+                <group name="absorption_properties" string="Job Accounts" colspan="2">
                     <field name="property_account_labor_categ_id"/>                			
                     <field name="property_account_overhead_absorp_categ_id" />
                     <field name="property_account_labor_wip_categ_id"/>                			
                     <field name="property_account_overhead_wip_categ_id" />
+                    <field name="property_account_cogs_material_categ_id"/>
+                    <field name="property_account_cogs_labor_categ_id"/>
                 </group>
             </group>
         </field>

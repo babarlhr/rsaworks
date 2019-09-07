@@ -45,9 +45,6 @@ class MRPWorkorder(models.Model):
     
         self.rollup_costs()
         res = super(MRPWorkorder, self).button_finish()
-        # Create Journal Entry from WIP To Finish Goods
-        for wo in self:
-            wo._create_wip2finish_account_move()
         return res
 
     def _create_wip2finish_account_move(self):
@@ -366,7 +363,6 @@ class MRPWorkorder(models.Model):
 
         if (self.production_id.product_id.tracking != 'none') and not self.final_lot_id and self.move_raw_ids:
             raise UserError(_('You should provide a lot/serial number for the final product'))
-
         # Update quantities done on each raw material line
         # For each untracked component without any 'temporary' move lines,
         # (the new workorder tablet view allows registering consumed quantities for untracked components)
@@ -389,7 +385,7 @@ class MRPWorkorder(models.Model):
                         qty_to_add, self.final_lot_id)
                 else:
                     move.quantity_done += float_round(
-                        self.qty_producing * move.unit_factor,
+                        move.product_uom_qty * move.unit_factor,
                         precision_rounding=rounding)
             elif len(move._get_move_lines()) < 2:
                 move.quantity_done += float_round(
@@ -514,7 +510,7 @@ class MRPProduction(models.Model):
                     valuation_amount = move.product_id.standard_price \
                                        * move.product_qty
                     material_cost += move.company_id.currency_id.\
-                        round(valuation_amount * move.product_qty)
+                        round(valuation_amount)
                     
             production.update({
                 'labor_cost': labor_cost,
@@ -564,3 +560,12 @@ class MRPProduction(models.Model):
             finished_move.value = production_cost
             finished_move.price_unit = production_cost / finished_move.product_uom_qty
         return True
+
+    @api.multi
+    def post_inventory(self):
+        res = super(MRPProduction, self).post_inventory()
+        # Create Journal Entry from WIP To Finish Goods
+        for mo in self:
+            for wo in mo.workorder_ids:
+                wo._create_wip2finish_account_move()
+        return res
