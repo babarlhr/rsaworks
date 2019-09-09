@@ -7,6 +7,8 @@ class Contact(models.Model):
     fax = fields.Char(string='Fax')
     opened_date = fields.Date(string='Opened Date')
     vendor_1099 = fields.Boolean(string='Vendor 1099')
+    ach_email = fields.Char(string='ACH Email')
+    ach_email_alt = fields.Char(string='ACH Email Alt')
 
     # I) CONTACTS
     # 1 FOCUS
