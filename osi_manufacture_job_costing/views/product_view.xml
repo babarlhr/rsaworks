@@ -35,6 +35,9 @@
                     <field name="property_account_cogs_material_categ_id"/>
                     <field name="property_account_cogs_labor_categ_id"/>
                 </group>
+                <group>
+                    <field name="is_job_type"/>
+                </group>
             </group>
         </field>
     </record>

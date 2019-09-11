@@ -45,6 +45,9 @@ class ProductCategory(models.Model):
         string='COGS Accounts (Labor)',
         help="This account will be used for COGS Accounts labor on manufaturing orders."
     )
+    is_job_type = fields.Boolean("Job Costing Required?")
+
+
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
@@ -85,6 +88,7 @@ class ProductTemplate(models.Model):
         string='COGS Accounts (Labor)',
         help="This account will be used for COGS Accounts labor on manufaturing orders."
     )
+    is_job_type = fields.Boolean(related="categ_id.is_job_type", string="Job Costing Required?")
 
     @api.multi
     def _get_product_accounts(self):
