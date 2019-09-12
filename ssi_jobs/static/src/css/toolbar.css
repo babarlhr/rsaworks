@@ -1,0 +1,9 @@
+/* Copyright (c) 2019-Present SSI */
+
+.o_main_navbar {
+    position: relative;
+    height: 46px;
+    border-bottom: 1px solid #68465f;
+    background-color: #945844;
+    color: white;
+}
