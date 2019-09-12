@@ -45,7 +45,7 @@
                 <group name="main">
                     <group name="left">
                         <field name="name" readonly="1"/>
-                        <field name="partner_id"/>
+                        <field name="partner_id" widget="res_partner_many2one" domain="[('customer','=',True)]" context="{'search_default_customer':1, 'show_address': 1}" options="{&quot;always_reload&quot;: True}"/>
                         <!-- <field name="objects"/> -->
                         <!-- <field name="size"/>
                         <field name="sizeUM"/>
@@ -94,10 +94,12 @@
                 <t t-name="kanban-box">
 
                     <div color="color" t-attf-class="oe_kanban_card oe_kanban_global_click">
+                      <div class="o_project_kanban_main">
+                        <div class="o_kanban_card_content">
                         
-                        <div class="o_dropdown_kanban dropdown" name="kanban_dropdown">
+                        <!-- div class="o_dropdown_kanban dropdown" name="kanban_dropdown">
                             <a class="dropdown-toggle o-no-caret btn" data-toggle="dropdown" href="#">
-                            <span class="fa fa-bars fa-lg"/>
+                                <i class="fa fa-ellipsis-v" role="img" aria-label="Manage" title="Manage" modifiers="{}"></i>
                             </a>
                             <div class="dropdown-menu" role="menu" name="ssi_div_e9f40d">
                             <t t-if="widget.editable">
@@ -108,7 +110,21 @@
                             </t>
                             <ul class="oe_kanban_colorpicker" data-field="color"/>
                             </div>
+                        </div -->
+                        <div class="o_kanban_card_manage_pane dropdown-menu" role="menu">
+                              <div class="o_kanban_card_manage_section o_kanban_manage_reports">
+                                   <div role="menuitem">
+                                       <a type="edit">Edit</a>
+                                   </div>
+                                   <div role="menuitem">
+                                       <a type="delete">Delete</a>
+                                   </div>
+                              </div>
+                              <div role="menuitem" aria-haspopup="true" class="o_no_padding_kanban_colorpicker">
+                                   <ul class="oe_kanban_colorpicker" data-field="color" role="popup"/>
+                              </div>
                         </div>
+
                         <div class="oe_kanban_bottom_left" name="studio_div_d9f9e7">
                             <field name="urgency" widget="priority" default_value="straight"/>
                         </div>
@@ -123,6 +139,8 @@
                             <field name="serial" display="full"/>
 
                         </div>
+                        </div>
+                      </div>
                     </div>
                 </t>
             </templates>
