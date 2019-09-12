@@ -3,9 +3,9 @@
 
 from odoo import http
 from odoo.http import request
+from odoo.addons.web.controllers.main import serialize_exception,content_disposition
 import werkzeug
 import json
-
 
 class attendance(http.Controller):
 
@@ -31,6 +31,20 @@ class attendance(http.Controller):
                 data = {'message': 'Error'}
             return data
         return {'message': 'No Attendance'}
+    
+class attendanceReport(http.Controller):
+    @http.route('/csv/download/payroll/<int:week>/attendance/<int:attendance_id>', auth='user')
+#     @http.route('/csv/download/payroll/<int:week>/week/<int:attendance_id>', auth='user')
+    def payroll_csv_download(self, week, attendance_id, **kw):
+        if attendance_id:
+            csv = http.request.env['hr.attendance.report']._csv_download({'week': week, 'attendnace_id':attendance_id})
+        else:
+            csv = http.request.env['hr.attendance.report']._csv_download({'week': week, 'attendnace_id':false})
+        filename = 'payroll_export_%s_%s.csv'%(week,attendance_id)
+
+        return request.make_response(csv,
+                                        [('Content-Type', 'application/octet-stream'),
+                                         ('Content-Disposition', 'attachment; filename="%s"'%(filename))])
 
         # input_data = request.httprequest.data
         # attendanceId = json.loads(input_data.decode("utf-8"))['attendance']

@@ -21,7 +21,8 @@
             <field name="binding_model_id" ref="hr_attendance.model_hr_attendance" />
             <field name="state">code</field>
             <field name="code">
-              for a in records:
+                records.approve_attendance()
+<!--               for a in records:
                   if a.status == 'approved':
                     raise Warning('Some selected attendances are already approved. Please select only open attendance records.')
                   else:
@@ -36,7 +37,7 @@
                     a.write({
                         'status': 'approved'
                     })
-                    record.env['mrp.workcenter.productivity'].sudo().create(data)
+                    record.env['mrp.workcenter.productivity'].sudo().create(data) -->
             </field>
         </record>
 
@@ -56,6 +57,18 @@
                   <field name="status"/>
               </tree>
              </xpath>
+            </field>
+        </record>		
+
+        <record id="resource_overtime_fields" model="ir.ui.view">
+            <field name="name">resource_overtime_fields</field>
+            <field name="model">resource.calendar</field>
+            <field name="inherit_id" ref="resource.resource_calendar_form"/>
+            <field name="arch" type="xml">
+              <xpath expr="//field[@name='tz']" position="after">
+                <field name="overtime_rule"/>
+                <field name="overtime_eligible"/>
+              </xpath>
             </field>
         </record>		
 
