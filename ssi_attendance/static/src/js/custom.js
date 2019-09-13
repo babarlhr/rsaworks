@@ -1,7 +1,7 @@
 odoo.define('hr_attendance.greeting_message_custom', function(require) {
   'use strict';
 
-  console.log('SSI CUSTOM JAVASCRIPT 2');
+  console.log('SSI CUSTOM JAVASCRIPT');
 
   // var AbstractAction = require('web.AbstractAction');
   var GreatingMessageOld = require('hr_attendance.greeting_message');
