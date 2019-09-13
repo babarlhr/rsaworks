@@ -23,6 +23,7 @@ class HrLeaves(models.Model):
                 fields.Datetime.from_string(holiday.date_from),
                 fields.Datetime.from_string(holiday.date_to),
             )
+#             raise UserError(_(work_hours_data))
             for index, (day_date, work_hours_count) in enumerate(work_hours_data):
                 
                 check_in = datetime.datetime(day_date.year, day_date.month, day_date.day, 8, 0, 0)

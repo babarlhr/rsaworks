@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import tools
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from datetime import datetime
 from odoo.exceptions import UserError
 
@@ -14,6 +14,7 @@ class AttendanceReport(models.Model):
     _rec_name = 'employee_id'
     _order = 'employee_id desc, begin_date desc'
 
+#     a_ids = fields.Char('Attendance Ids', readonly=True)
     overtime_group = fields.Char('Overtime Rule', readonly=True)
     employee_badge = fields.Char('Employee ID', readonly=True)
     employee_id = fields.Many2one('hr.employee', 'Employee', readonly=True)
@@ -199,19 +200,57 @@ class AttendanceReport(models.Model):
                             ]
                             csv_row = u'","'.join(data)
                             csv += u"\"{}\"\n".format(csv_row)
+                            
+                # Update the History File\
+#                ARRAY_AGG(a.id) as a_ids,
+#                 ids_to_add = []
+#                 res = att.a_ids.strip('][').split(', ') 
+# #                 raise UserError(_(res))
+#                 for a_id in res:
+#                     ids_to_add = self.env['hr.attendance'].search([('id', '=', a_id)], limit=1)
+#                 data = {'a_ids': ids_to_add,
+                data = {'org_id': att.id,
+                        'overtime_group': att.overtime_group,
+                        'employee_badge': att.employee_badge, 
+                        'employee_id': att.employee_id.id, 
+                        'department': att.department.id,
+                        'begin_date': att.begin_date,
+                        'week_no': att.week_no,
+                        'shift': att.shift,
+                        'start_hours': att.start_hours,
+                        'hours': att.hours,
+                        'straight_time': att.straight_time,
+                        'over_time': att.over_time,
+                        'days_worked': att.days_worked,
+                        'double_time': att.double_time}
+#                 raise UserError(_(data))
+                attendanceHist = self.env['hr.attendance.history'].sudo()
+                if not attendanceHist.search([('org_id', '=', att.id)]):
+                    attendanceHist.sudo().create(data)
+
+
 
         return csv
 
-#         data = {
-#             'workorder_id': self.workorder_id.id,
-#             'workcenter_id': self.workorder_id.workcenter_id.id,
-#             'loss_id': 7,
-#             'user_id': self.employee_id.user_id.id,
-#             'date_start': self.check_in,
-#             'date_end': self.check_out,
-#             # 'x_studio_labor_codes': self.labor_code_id.id
-#         }
-#         self.write({
-#             'status': 'approved'
-#         })
-#         self.env['mrp.workcenter.productivity'].sudo().create(data)
+class AttendanceHistory(models.Model):
+    _name = "hr.attendance.history"
+    _description = "Attendance History"
+    _rec_name = 'employee_id'
+    _order = 'employee_id desc, begin_date desc'
+
+#     a_ids = fields.Many2one('hr.attendance',string='Attendance')
+    org_id = fields.Integer('Original ID')
+    overtime_group = fields.Char('Overtime Rule')
+    employee_badge = fields.Char('Employee ID')
+    employee_id = fields.Many2one('hr.employee', 'Employee')
+    department = fields.Many2one('hr.department', 'Department')
+    begin_date = fields.Char('Week Start Date')
+    week_no = fields.Integer('Week Number')
+    shift = fields.Char('Shift')
+    start_hours = fields.Integer('Start Hours')
+    hours = fields.Float('Hours Worked')
+    straight_time = fields.Float('Straight Time')
+    over_time = fields.Float('Over Time')
+    days_worked = fields.Float('Days Worked')
+    double_time = fields.Float('Double Time')
+

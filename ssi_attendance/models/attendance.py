@@ -8,6 +8,7 @@ class HrAttendance(models.Model):
 
     status = fields.Selection(string="Status", selection=[(
         'open', 'Open'), ('approved', 'Approved')], default='open', track_visibility='onchange')
+    exported = fields.Boolean(string="Exported", track_visibility='onchange')
     attendance_lines = fields.One2many('hr.attendance.line', 'attendance_id', string='Attendance Lines', copy=True)
 
     @api.one
