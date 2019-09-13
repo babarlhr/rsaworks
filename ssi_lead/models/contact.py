@@ -4,6 +4,7 @@ from odoo import api, fields, models, tools, _
 class Contact(models.Model):
     _inherit = 'res.partner'
 
+    project_manager_id = fields.Many2one('res.users', string='Project Manager', help='Project Manager from user table.')
     fax = fields.Char(string='Fax')
     opened_date = fields.Date(string='Opened Date')
     vendor_1099 = fields.Boolean(string='Vendor 1099')

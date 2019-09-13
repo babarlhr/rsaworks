@@ -77,6 +77,9 @@
                 <xpath expr="//field[@name='mobile']" position="after">
                     <field name="fax"/>
                 </xpath>
+                <xpath expr="//form[1]/sheet[1]/notebook[1]/page[@name='sales_purchases']/group[@name='container_row_2']/group[@name='sale']/field[@name='user_id']" position="after">
+                    <field name="project_manager_id"/>
+                </xpath>
             </field>
         </record>
 
