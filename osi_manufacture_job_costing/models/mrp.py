@@ -82,6 +82,7 @@ class MRPWorkorder(models.Model):
         # Create data for account move and post them
 
         name = job_id and job_id.name + '-' + production.name + '-' + workorder.name or production.name + '-' + workorder.name
+        name = workorder.add_consumption and ('Extra Work: ' + name) or name
         ref = job_id and job_id.name + '-' + production.name + '-' + workorder.name or production.name + '-' + workorder.name
 
         # WIP to COGS account move lines (Labor)
@@ -576,6 +577,8 @@ class MRPProduction(models.Model):
         production = self
         move_obj = self.env['account.move']
         material_cost = production.material_cost
+        if material_cost == 0:
+            return True
         product = production.product_id
 
         # Prepare accounts
