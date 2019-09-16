@@ -12,25 +12,30 @@ class MRPWorkcenter(models.Model):
         'rate', 'Rate'), ('percent', 'Percentage')], default='rate', copy=True)
         
     burden_costs_hour = fields.Float(
-        'Burden Cost per hour'
+        'Burden Cost per hour',
+        copy=False
     )
     burden_costs_percent = fields.Float(
-        'Burden Cost Percentage'
+        'Burden Cost Percentage',
+        copy=False
     )
 
 class MRPWorkorder(models.Model):
     _inherit = 'mrp.workorder'
 
     labor_cost = fields.Float(
-        'Labor Cost'
+        'Labor Cost',
+        copy=False
     )
     
     burden_cost = fields.Float(
-        'Burden'
+        'Burden',
+        copy=False
     )
     
     total_cost = fields.Float(
-        'Total Cost'
+        'Total Cost',
+        copy=False
     )
     
     add_consumption = fields.Boolean(
