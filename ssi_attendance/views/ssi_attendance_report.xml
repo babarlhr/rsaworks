@@ -24,15 +24,17 @@
 	  <field name="arch" type="xml">
 		<tree string="Employee Attendance">
 			<field name="begin_date"/>
-			<field name="employee_badge"/>
+			<!-- field name="employee_badge"/ -->
 			<field name="employee_id"/>
-			<field name="department"/>
+			<!-- field name="department"/ -->
 			<field name="shift"/>
 			<field name="days_worked"/>
 			<field name="hours"/>
 			<field name="straight_time"/>
 			<field name="over_time"/>
 			<field name="double_time"/>
+			<field name="pto_time"/>
+			<field name="time_type"/>
 		</tree>
 	  </field>
 	</record>
@@ -68,6 +70,7 @@
                         <field name="employee_id"/>
                         <field name="department"/>
                         <field name="shift"/>
+                        <field name="time_type"/>
                     </group>
                     <group>
                         <field name="begin_date"/>

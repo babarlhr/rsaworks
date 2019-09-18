@@ -10,24 +10,32 @@ from odoo.exceptions import UserError
 class AttendanceReport(models.Model):
     _name = "hr.attendance.report"
     _description = "Attendance Report"
-    _auto = False
+    _auto = True
     _rec_name = 'employee_id'
     _order = 'employee_id desc, begin_date desc'
 
-#     a_ids = fields.Char('Attendance Ids', readonly=True)
-    overtime_group = fields.Char('Overtime Rule', readonly=True)
-    employee_badge = fields.Char('Employee ID', readonly=True)
-    employee_id = fields.Many2one('hr.employee', 'Employee', readonly=True)
-    department = fields.Many2one('hr.department', 'Department', readonly=True)
-    begin_date = fields.Char('Week Start Date', readonly=True)
-    week_no = fields.Integer('Week Number', readonly=True)
-    shift = fields.Char('Shift', readonly=True)
-    start_hours = fields.Integer('Start Hours', readonly=True)
-    hours = fields.Float('Hours Worked', readonly=True)
-    straight_time = fields.Float('Straight Time', readonly=True)
-    over_time = fields.Float('Over Time', readonly=True)
-    days_worked = fields.Float('Days Worked', readonly=True)
-    double_time = fields.Float('Double Time', readonly=True)
+#     a_ids = fields.Char('Attendance Ids')
+    overtime_group = fields.Char('Overtime Rule')
+    employee_badge = fields.Char('Employee ID')
+    employee_id = fields.Many2one('hr.employee', 'Employee')
+    department = fields.Many2one('hr.department', 'Department')
+    begin_date = fields.Char('Week Start Date')
+    week_no = fields.Integer('Week Number')
+    shift = fields.Char('Shift')
+    start_hours = fields.Integer('Start Hours')
+    hours = fields.Float('Hours Worked')
+    straight_time = fields.Float('Straight Time')
+    over_time = fields.Float('Over Time')
+    days_worked = fields.Float('Days Worked')
+    double_time = fields.Float('Double Time')
+    pto_time = fields.Float('PTO Time')
+#     ptoe_time = fields.Float('PTO-E Time')
+#     ptosl_time = fields.Float('PTOSL Time')
+#     jury_time = fields.Float('Jury Duty Time')
+#     hol_time = fields.Float('Holiday Time')
+#     brvmt_time = fields.Float('Bereavement Time')
+    time_type = fields.Char('Time Type')
+#     time_type = fields.Many2one('hr.leave.type', 'Time Type', readonly=True)
 
     
     def _query(self, with_clause='', fields={}, groupby='', from_clause=''):
@@ -59,19 +67,61 @@ class AttendanceReport(models.Model):
                         SUM(ROUND(CAST(a.worked_hours + 0.00 as Decimal), 2))
                         FILTER (WHERE EXTRACT('dow' from a.check_in) = 0)
                     ELSE 0
-                END as double_time
+                END as double_time,
+                CASE 
+                    WHEN l.time_type = 'leave' THEN 
+                        SUM(ROUND(CAST(a.worked_hours + 0.00 as Decimal), 2))
+                    ELSE 0
+                END as pto_time,
+                l.name as time_type
             FROM
                 hr_attendance a
                 LEFT JOIN hr_employee b ON b.id = a.employee_id
                 LEFT JOIN resource_calendar c ON c.id = b.resource_calendar_id
                 LEFT JOIN ssi_resource_overtime o ON o.id = c.overtime_rule
+                LEFT JOIN hr_leave_type l ON l.id = a.hour_type
             WHERE
-                o.id = 1
+                l.time_type = 'leave' or l.time_type is NULL
             GROUP BY
-                overtime_group, employee_id, employee_badge, department, shift, begin_date, week_no, start_hours, c.overtime_eligible
+                overtime_group, employee_id, employee_badge, department, shift, begin_date, week_no, start_hours, c.overtime_eligible, l.name, time_type
           UNION
             SELECT
                 MIN(a.id) as id,
+                o.name as overtime_group,
+                b.barcode as employee_badge,
+                a.employee_id as employee_id,
+                b.department_id as department,
+                c.name as shift,
+                DATE_TRUNC('week', a.check_in) as begin_date,
+                EXTRACT('week' from a.check_in) as week_no,
+                MIN(o.start_hours) as start_hours,
+                0 as hours,
+                0 as straight_time,
+                0 as over_time,
+                COUNT(DISTINCT(DATE_TRUNC('day', a.check_in))) as days_worked,
+                CASE 
+                    WHEN c.overtime_eligible AND COUNT(DISTINCT(DATE_TRUNC('day', a.check_in))) = 7 THEN 
+                        SUM(ROUND(CAST(a.worked_hours + 0.00 as Decimal), 2))
+                        FILTER (WHERE EXTRACT('dow' from a.check_in) = 0)
+                    ELSE 0
+                END as double_time,
+                SUM(ROUND(CAST(a.worked_hours + 0.00 as Decimal), 2)) as pto_time,
+                l.name as time_type
+            FROM
+                hr_attendance a
+                LEFT JOIN hr_employee b ON b.id = a.employee_id
+                LEFT JOIN resource_calendar c ON c.id = b.resource_calendar_id
+                LEFT JOIN ssi_resource_overtime o ON o.id = c.overtime_rule
+                LEFT JOIN hr_leave_type l ON l.id = a.hour_type
+            WHERE
+                l.time_type = 'other'
+            GROUP BY
+                overtime_group, employee_id, employee_badge, department, shift, begin_date, week_no, start_hours, c.overtime_eligible, l.name, time_type
+        """
+
+        select2_ = """
+            SELECT
+                1 as id,
                 o.name as overtime_group,
                 b.barcode as employee_badge,
                 a.employee_id as employee_id,
@@ -95,25 +145,71 @@ class AttendanceReport(models.Model):
                         SUM(ROUND(CAST(a.worked_hours + 0.00 as Decimal), 2))
                         FILTER (WHERE EXTRACT('dow' from a.check_in) = 0)
                     ELSE 0
-                END as double_time
+                END as double_time,
+                CASE 
+                    WHEN l.name = 'PTO-I' THEN 
+                        SUM(ROUND(CAST(a.worked_hours + 0.00 as Decimal), 2))
+                        FILTER (WHERE EXTRACT('dow' from a.check_in) = 0)
+                    ELSE 0
+                END as ptoi_time,
+                0 as ptoe_time,
+                0 as ptosl_time,
+                CASE 
+                    WHEN l.name = 'Jury Duty' THEN 
+                        SUM(ROUND(CAST(a.worked_hours + 0.00 as Decimal), 2))
+                        FILTER (WHERE EXTRACT('dow' from a.check_in) = 0)
+                    ELSE 0
+                END as jury_time,
+                CASE 
+                    WHEN l.name = 'Holiday' THEN 
+                        SUM(ROUND(CAST(a.worked_hours + 0.00 as Decimal), 2))
+                        FILTER (WHERE EXTRACT('dow' from a.check_in) = 0)
+                    ELSE 0
+                END as hol_time,
+                CASE 
+                    WHEN l.name = 'Bereavement' THEN 
+                        SUM(ROUND(CAST(a.worked_hours + 0.00 as Decimal), 2))
+                        FILTER (WHERE EXTRACT('dow' from a.check_in) = 0)
+                    ELSE 0
+                END as brvmt_time
             FROM
                 hr_attendance a
                 LEFT JOIN hr_employee b ON b.id = a.employee_id
                 LEFT JOIN resource_calendar c ON c.id = b.resource_calendar_id
                 LEFT JOIN ssi_resource_overtime o ON o.id = c.overtime_rule
+                LEFT JOIN hr_leave_type l ON l.id = a.hour_type
             WHERE
-                o.id >= 2
+                l.time_type = 'leave' or l.time_type is NULL
             GROUP BY
-                overtime_group, employee_id, employee_badge, department, shift, begin_date, week_no, start_hours, c.overtime_eligible
-        """
+                overtime_group, employee_id, employee_badge, department, shift, begin_date, week_no, start_hours, c.overtime_eligible, l.name
+         """
 
         return select_
 
     @api.model_cr
     def init(self):
         self._table = 'hr_attendance_report'
-        tools.drop_view_if_exists(self.env.cr, self._table)
-        self.env.cr.execute("""CREATE or REPLACE VIEW %s as (%s)""" % (self._table, self._query()))
+#         tools.drop_view_if_exists(self.env.cr, self._table)
+#         self.env.cr.execute("""CREATE or REPLACE VIEW %s as (%s)""" % (self._table, self._query()))
+        self.env.cr.execute("""TRUNCATE %s""" % (self._table))
+        self.env.cr.execute(self._query())
+        for id, o_group, emp_badge, emp_id, dept, shift, beg_date, week_no, start_hours, hours, straight_tm, over_tm, days_worked, double, pto, time_type in self._cr.fetchall():
+            data = {'overtime_group': o_group,
+                    'employee_badge': emp_badge, 
+                    'employee_id': emp_id, 
+                    'department': dept,
+                    'begin_date': beg_date.strftime("%Y-%m-%d %H:%M:%S"),
+                    'week_no': week_no,
+                    'shift': shift,
+                    'start_hours': start_hours,
+                    'hours': hours,
+                    'straight_time': straight_tm,
+                    'over_time': over_tm,
+                    'days_worked': days_worked,
+                    'double_time': double,
+                    'pto_time': pto,
+                    'time_type': time_type}
+            res = self.create(data)
 
     @api.multi
     def payroll_export(self):
@@ -230,7 +326,7 @@ class AttendanceReport(models.Model):
 
 
 
-        return csv
+#         return csv
 
 class AttendanceHistory(models.Model):
     _name = "hr.attendance.history"
