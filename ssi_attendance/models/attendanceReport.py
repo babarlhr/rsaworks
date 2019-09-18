@@ -276,6 +276,7 @@ class AttendanceReport(models.Model):
                 # Update the History File\
                 data = {'org_id': att.id,
                         'overtime_group': att.overtime_group,
+                        'overtime_eligible': att.overtime_eligible,
                         'employee_badge': att.employee_badge, 
                         'employee_id': att.employee_id.id, 
                         'department': att.department.id,
@@ -283,10 +284,14 @@ class AttendanceReport(models.Model):
                         'week_no': att.week_no,
                         'shift': att.shift,
                         'start_hours': att.start_hours,
+                        'total_hours': att.total_hours,
                         'hours': att.hours,
                         'straight_time': att.straight_time,
                         'over_time': att.over_time,
                         'days_worked': att.days_worked,
+                        'pto_time': att.pto_time,
+                        'time_type': att.time_type,
+                        'leave_type': att.leave_type.id,
                         'double_time': att.double_time}
 #                 raise UserError(_(data))
                 attendanceHist = self.env['hr.attendance.history'].sudo()
@@ -306,6 +311,7 @@ class AttendanceHistory(models.Model):
 #     a_ids = fields.Many2one('hr.attendance',string='Attendance')
     org_id = fields.Integer('Original ID')
     overtime_group = fields.Char('Overtime Rule')
+    overtime_eligible = fields.Char('Overtime Eligible')
     employee_badge = fields.Char('Employee ID')
     employee_id = fields.Many2one('hr.employee', 'Employee')
     department = fields.Many2one('hr.department', 'Department')
@@ -313,9 +319,14 @@ class AttendanceHistory(models.Model):
     week_no = fields.Integer('Week Number')
     shift = fields.Char('Shift')
     start_hours = fields.Integer('Start Hours')
+    total_hours = fields.Float('Total Hours')
     hours = fields.Float('Hours Worked')
     straight_time = fields.Float('Straight Time')
     over_time = fields.Float('Over Time')
     days_worked = fields.Float('Days Worked')
     double_time = fields.Float('Double Time')
+    pto_time = fields.Float('PTO Hours')
+    time_type = fields.Char('Time Type')
+    leave_type = fields.Many2one('hr.leave.type', 'PTO Type')
+
 

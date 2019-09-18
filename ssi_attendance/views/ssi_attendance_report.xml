@@ -153,12 +153,13 @@
 	  <field name="arch" type="xml">
 		<tree string="Employee Attendance History">
 			<field name="begin_date"/>
-			<field name="employee_badge"/>
 			<field name="employee_id"/>
-			<field name="department"/>
 			<field name="shift"/>
 			<field name="days_worked"/>
+			<field name="total_hours"/>
 			<field name="hours"/>
+			<field name="pto_time"/>
+			<field name="time_type"/>
 			<field name="straight_time"/>
 			<field name="over_time"/>
 			<field name="double_time"/>
