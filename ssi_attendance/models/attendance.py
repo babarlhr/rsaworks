@@ -8,7 +8,15 @@ class HrAttendance(models.Model):
 
     status = fields.Selection(string="Status", selection=[(
         'open', 'Open'), ('approved', 'Approved')], default='open', track_visibility='onchange')
-    exported = fields.Boolean(string="Exported", track_visibility='onchange')
+#     hour_type = fields.Selection(string="Type of Hours", selection=[
+#         ('Regular', 'Regular'), 
+#         ('PTO-I', 'PTO-I'),
+#         ('PTO-E', 'PTO-E'), 
+#         ('PTO Sell', 'PTO Sell'), 
+#         ('Jury Duty', 'Jury Duty'), 
+#         ('Holiday', 'Holiday'), 
+#         ('Bereavement', 'Bereavement')], default='Regular')
+    hour_type = fields.Many2one('hr.leave.type', string="Leave Type")
     attendance_lines = fields.One2many('hr.attendance.line', 'attendance_id', string='Attendance Lines', copy=True)
 
     @api.one

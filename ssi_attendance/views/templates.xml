@@ -12,6 +12,9 @@
                   <field name="status" widget="statusbar" statusbar_visible="open,approved"/>
                </header>
              </xpath>
+              <xpath expr="//form[1]/sheet[1]/group[1]/field[@name='check_out']" position="after">
+                <field name="hour_type"/>
+              </xpath>
             </field>
         </record>	
 
@@ -53,6 +56,7 @@
                   <field name="employee_id"/>
                   <field name="check_in"/>
                   <field name="check_out"/>
+                  <field name="hour_type"/>
                   <field name="worked_hours"/>
                   <field name="status"/>
               </tree>
