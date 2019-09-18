@@ -29,12 +29,13 @@
 			<!-- field name="department"/ -->
 			<field name="shift"/>
 			<field name="days_worked"/>
+			<field name="total_hours"/>
 			<field name="hours"/>
+			<field name="pto_time"/>
+			<field name="time_type"/>
 			<field name="straight_time"/>
 			<field name="over_time"/>
 			<field name="double_time"/>
-			<field name="pto_time"/>
-			<field name="time_type"/>
 		</tree>
 	  </field>
 	</record>
@@ -85,6 +86,34 @@
 	  </field>
 	</record>
     
+        <record model="ir.actions.server" id="action_payroll_export">
+            <field name="name">Payroll Export</field>
+            <field name="model_id" ref="ssi_attendance.model_hr_attendance_report"/>
+            <field name="binding_model_id" ref="ssi_attendance.model_hr_attendance_report" />
+            <field name="state">code</field>
+            <field name="code">
+                for rec in records:
+                    rec.payroll_export()
+                    break
+<!--               for a in records:
+                  if a.status == 'approved':
+                    raise Warning('Some selected attendances are already approved. Please select only open attendance records.')
+                  else:
+                    data = {
+                        'workorder_id': a.workorder_id.id,
+                        'workcenter_id': a.workorder_id.workcenter_id.id,
+                        'loss_id': 7,
+                        'user_id': a.employee_id.user_id.id,
+                        'date_start': a.check_in,
+                        'date_end': a.check_out,
+                    }
+                    a.write({
+                        'status': 'approved'
+                    })
+                    record.env['mrp.workcenter.productivity'].sudo().create(data) -->
+            </field>
+        </record>
+
 	<record model="ir.actions.act_window" id="hr_attendance_report_view">
 	  <field name="name">Attendance Report</field>
 	  <field name="res_model">hr.attendance.report</field>
