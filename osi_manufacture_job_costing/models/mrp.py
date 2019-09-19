@@ -172,11 +172,20 @@ class MRPWorkorder(models.Model):
 
     @api.model
     def run_job_costing_scheduler(self):
-        # Get all the in progress workorders and process them one by one
-        in_process_wos = self.env['mrp.workorder'].search([('state','=','progress')])
-        # rollup costs for all in process wos
-        if in_process_wos:
-            in_process_wos.rollup_costs()
+        # Get all the workorders which has unprocessed time entries and process them one by one
+        query = """
+            SELECT distinct(workorder_id) from mrp_workcenter_productivity where date_end is not null and cost_already_recorded='f'
+        """
+        self.env.cr.execute(query, ())
+        workorder_ids =  []
+        for wo in self.env.cr.dictfetchall():
+            if wo.get('workorder_id'):
+                workorder_ids.append(wo.get('workorder_id'))
+
+        workorder_ids = self.env['mrp.workorder'].browse(workorder_ids)
+        # calculate rollup costs for all workorder_ids
+        if workorder_ids:
+            workorder_ids.rollup_costs()
 
     @api.multi
     def rollup_costs(self):
@@ -201,7 +210,7 @@ class MRPWorkorder(models.Model):
             burden_total = 0.0
             
             for time_rec in time_ids:
-                if time_rec.cost_already_recorded:
+                if time_rec.cost_already_recorded or not time_rec.date_end:
                     continue
                     
                 labor = time_rec.duration * labor_rate
