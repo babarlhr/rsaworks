@@ -12,6 +12,7 @@ class SaleSubscription(models.Model):
 #     equip_id = fields.Char(string='Equip_id')
     storage_id = fields.One2many('storage', 'subscription_id', string='Storage')
     square_foot_total = fields.Float(string='Square Foot Total', compute='_get_sqf_total')
+    last_invoice_date = fields.Date(string='Last Invoiced Date', compute='_get_last_invoice')
 
     # ACTIONS AND METHODS
     def recurring_invoice(self):
@@ -31,6 +32,15 @@ class SaleSubscription(models.Model):
                 total = total + strg.equip_square_feet
             record.square_foot_total = total
 
+    def _get_last_invoice(self):
+        Invoice = self.env['account.invoice']
+        can_read = Invoice.check_access_rights('read', raise_exception=False)
+        for subscription in self:
+            current_invoice = Invoice.search([('invoice_line_ids.subscription_id', '=', subscription.id)],order="id desc",limit=1)
+            if current_invoice:
+                subscription.last_invoice_date = current_invoice.date_invoice
+            else:
+                subscription.last_invoice_date = 0
 
     @api.multi
     def ssi_update_lines(self):
@@ -41,12 +51,16 @@ class SaleSubscription(models.Model):
         for strg in self.storage_id:
             if not strg.check_out or strg.check_out.date() > strg.last_invoiced:
                 line_name = '%s (%s)' % (strg.equipment_id.name, strg.equip_serial_no)
+                uom =  self.env['uom.uom'].search([('id', '=', strg.subscription_uom.id)], limit=1)
+                price = uom.factor_inv * strg.subscription_price
                 vals = {
                     "product_id": product.id,
                     "name": line_name,
                     "quantity": strg.equip_square_feet,
-                    "price_unit":  strg.subscription_price
+                    "price_unit": price
                 }
+                if strg.subscription_uom:
+                    vals.update({"uom_id": strg.subscription_uom})
                 lines.append(vals)
         self.update({"recurring_invoice_line_ids": lines})
 

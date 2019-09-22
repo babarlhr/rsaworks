@@ -8,6 +8,7 @@ import requests
 class MaintenanceEquipment(models.Model):
     _inherit = 'maintenance.equipment'
     
+    location = fields.Char('Location', compute='_compute_current_location')
 #     equip_id = fields.Char(string='Equip_id')
     description = fields.Char(string='Description')
     rating = fields.Float(string='Rating')
@@ -87,6 +88,15 @@ class MaintenanceEquipment(models.Model):
     ui_rated = fields.Selection(
         [('Yes', 'Yes'), ('No', 'No')], string='UI Rated')
     ui_rating = fields.Char(string='UI Rating')
+
+    @api.depends('storage_ids.location_id')
+    def _compute_current_location(self):
+        """ Get the current location and save it at the equipment level
+        """
+        for rec in self:
+            for strg in rec.storage_ids:
+                loc = strg.location_id
+            rec.location = loc
 
     @api.depends('description')
     def _get_ssi_jobs_count(self):

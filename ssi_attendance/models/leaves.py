@@ -29,6 +29,7 @@ class HrLeaves(models.Model):
                 check_in = datetime.datetime(day_date.year, day_date.month, day_date.day, 8, 0, 0)
                 check_out_time = 8 + int(work_hours_count)
                 check_out = datetime.datetime(day_date.year, day_date.month, day_date.day, check_out_time, 0, 0)
+#                 raise UserError(check_out)
                 
                 self.env['hr.attendance'].create({
                     'check_in': check_in,

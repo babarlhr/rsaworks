@@ -18,6 +18,7 @@
 					  <field name="check_out"/>
 					  <field name="equip_square_feet"/>
 					  <field name="subscription_price"/>
+					  <field name="subscription_uom"/>
 					  <field name="last_invoiced"/>
 				  </tree>
 				</field>

@@ -132,7 +132,7 @@ class AttendanceReport(models.Model):
                         dw = dw + r.days_worked
                 if st >= record.start_hours and not record.leave_type.time_type:
                     ot = st - r.start_hours
-                    record.straight_time = record.hours - ot
+                    record.straight_time = record.hours - ot if (record.hours - ot) > 0 else 0
                 else:
                     record.straight_time = record.hours
                 
@@ -151,7 +151,7 @@ class AttendanceReport(models.Model):
                         st = st + r.total_hours
                         dw = dw + r.days_worked
                 if st >= record.start_hours and dw < 7 and not record.leave_type.time_type:
-                    record.over_time = st - r.start_hours
+                    record.over_time = st - r.start_hours if (st - r.start_hours) > 0 else 0
                 else:
                     record.over_time = 0
             else:

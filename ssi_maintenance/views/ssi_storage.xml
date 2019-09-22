@@ -12,6 +12,7 @@
               <field name="check_out"/>
               <field name="subscription_id"/>
               <field name="subscription_price"/>
+              <field name="subscription_uom"/>
               <field name="last_invoiced"/>
           </tree>
       </field>
@@ -34,6 +35,7 @@
                           <group>
                               <field name="subscription_id"/>
                               <field name="subscription_price"/>
+                              <field name="subscription_uom" groups="uom.group_uom"/>
                               <field name="last_invoiced"/>
                           </group>
                       </group>
