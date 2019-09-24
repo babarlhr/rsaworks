@@ -45,9 +45,12 @@ class SaleSubscription(models.Model):
     @api.multi
     def ssi_update_lines(self):
         # Update subsctiption lines
-        self.wipe()
+        lines = self.recurring_invoice_line_ids
+        lines_to_remove = lines.filtered(lambda l: l.product_id.storage_subscription)
+#         raise UserError(_(lines_to_remove))
+        lines_to_remove.unlink()
         lines = []
-        product =  self.env['product.product'].search([('default_code', '=', 'Storage Fee')], limit=1)
+        product =  self.env['product.product'].search([('storage_subscription', '=', True)], limit=1)
         for strg in self.storage_id:
             if not strg.check_out or strg.check_out.date() > strg.last_invoiced:
                 line_name = '%s (%s)' % (strg.equipment_id.name, strg.equip_serial_no)

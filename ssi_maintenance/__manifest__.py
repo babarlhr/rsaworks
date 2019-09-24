@@ -25,9 +25,9 @@
         'views/ssi_storage.xml',
         'views/ssi_subscription.xml',
         'views/ssi_budgets.xml',
+        'views/ssi_product.xml',
         'report/ssi_maintenance_report.xml',
         'security/ir.model.access.csv',
-
     ],
     "application":  False,
     "installable":  True,

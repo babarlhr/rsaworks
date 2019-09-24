@@ -34,13 +34,29 @@ class Storage(models.Model):
     @api.onchange('check_out')
     def _on_check_out_change(self):
         for rec in self:
-            if 'Quarter' in rec.subscription_id.template_id.name and rec.last_invoiced < rec.check_out.date():
-                diff = abs((rec.last_invoiced - rec.check_out.date()).days)
-                if diff <= 30:
+            if rec.last_invoiced.month < rec.check_out.date().month:
+                diff = rec.check_out.date().month - rec.last_invoiced.month
+                if diff == 1:
                     rec.subscription_uom = 30
-                elif diff <= 60:
+                elif diff == 2:
                     rec.subscription_uom = 33
-                else:
+                elif diff == 3:
                     rec.subscription_uom = 31
-            elif 'Monthly' in rec.subscription_id.template_id.name:
-                    rec.subscription_uom = 30
+                elif diff == 4:
+                    rec.subscription_uom = 37
+                elif diff == 5:
+                    rec.subscription_uom = 38
+                elif diff == 6:
+                    rec.subscription_uom = 39
+                elif diff == 7:
+                    rec.subscription_uom = 40
+                elif diff == 8:
+                    rec.subscription_uom = 41
+                elif diff == 9:
+                    rec.subscription_uom = 42
+                elif diff == 10:
+                    rec.subscription_uom = 43
+                elif diff == 11:
+                    rec.subscription_uom = 44
+                elif diff == 12:
+                    rec.subscription_uom = 45
