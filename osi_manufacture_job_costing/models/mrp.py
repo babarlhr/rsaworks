@@ -52,21 +52,16 @@ class MRPWorkorder(models.Model):
         res = super(MRPWorkorder, self).button_finish()
         return res
 
-    def _create_wip2cogs_labor_acc_move(self):
-        move_obj = self.env['account.move']
+    def _prepare_wip2cogs_labor_acc_move(self):
         workorder = self
 
         labor_cost = workorder.labor_cost
-        burden_cost = workorder.burden_cost
         product = workorder.product_id
         production = workorder.production_id
 
         # Prepare accounts
         accounts = product.product_tmpl_id.get_product_accounts()
-        journal_id = accounts['stock_journal'].id
-        stock_valuation_id = accounts['stock_valuation'].id
         labor_wip_acc_id = accounts['labor_wip_acc_id'].id
-        overhead_wip_acc_id = accounts['overhead_wip_acc_id'].id
         production_account_id = accounts['production_account_id'].id
         # COGS Accounts
         expense_account_id = accounts['expense'].id
@@ -78,17 +73,14 @@ class MRPWorkorder(models.Model):
         if not expense_account_id or not cogs_labor_account_id:
             raise UserError(_("COGS accounts need to be set on the product %s.") % (product.name,))
 
-        if not labor_wip_acc_id or not overhead_wip_acc_id:
-            raise UserError(_("Labor and Burden WIP accounts need to be set."))
-            
-        if not labor_wip_acc_id or not overhead_wip_acc_id or not production_account_id:
-            raise UserError(_("WIP account needs to be set on production location"))
+        if not labor_wip_acc_id or not production_account_id:
+            raise UserError(_("WIP account needs to be set on labor or production location"))
 
         # Create data for account move and post them
 
-        name = job_id and job_id.name + '-' + production.name + '-' + workorder.name or production.name + '-' + workorder.name
+        name = job_id and job_id.name + '-Labor-' + production.name + '-' + workorder.name or production.name + '-' + workorder.name
         name = workorder.add_consumption and ('Extra Work: ' + name) or name
-        ref = job_id and job_id.name + '-' + production.name + '-' + workorder.name or production.name + '-' + workorder.name
+        ref = name
 
         # WIP to COGS account move lines (Labor)
         debit_line_vals = {
@@ -119,15 +111,37 @@ class MRPWorkorder(models.Model):
         }
 
         move_lines = [(0, 0, debit_line_vals), (0, 0, credit_line_vals)]
+        return move_lines
 
-        # WIP to COGS account move (Labor)
-        if move_lines:
-            new_move = move_obj.create(
-                {'journal_id': journal_id,
-                    'line_ids': move_lines,
-                    'date': fields.Date.context_today(self),
-                    'ref': name or ''})
-            new_move.post()
+    def _prepare_wip2cogs_overhead_acc_move(self):
+        workorder = self
+
+        burden_cost = workorder.burden_cost
+        product = workorder.product_id
+        production = workorder.production_id
+
+        # Prepare accounts
+        accounts = product.product_tmpl_id.get_product_accounts()
+        overhead_wip_acc_id = accounts['overhead_wip_acc_id'].id
+        production_account_id = accounts['production_account_id'].id
+        # COGS Accounts
+        expense_account_id = accounts['expense'].id
+        cogs_labor_account_id = accounts['cogs_labor_id'].id
+        job_id = production.ssi_job_id or False
+        partner_id = job_id and job_id.partner_id.id or False
+        analytic_account_id = job_id and job_id.aa_id.id or False
+
+        if not expense_account_id or not cogs_labor_account_id:
+            raise UserError(_("COGS accounts need to be set on the product %s.") % (product.name,))
+
+        if not overhead_wip_acc_id or not production_account_id:
+            raise UserError(_("WIP account needs to be set on overhead or production location"))
+
+        # Create data for account move and post them
+
+        name = job_id and job_id.name + '-Burden-' + production.name + '-' + workorder.name or production.name + '-' + workorder.name
+        name = workorder.add_consumption and ('Extra Work: ' + name) or name
+        ref = name
 
         # WIP to COGS account move lines (Overhead)
         debit_line_vals = {
@@ -158,17 +172,7 @@ class MRPWorkorder(models.Model):
         }
 
         move_lines = [(0, 0, debit_line_vals), (0, 0, credit_line_vals)]
-
-        # WIP to COGS account move (Overhead)
-        if move_lines:
-            new_move = move_obj.create(
-                {'journal_id': journal_id,
-                    'line_ids': move_lines,
-                    'date': fields.Date.context_today(self),
-                    'ref': name or ''})
-            new_move.post()
-
-        return True
+        return move_lines
 
     @api.model
     def run_job_costing_scheduler(self):
@@ -547,6 +551,7 @@ class MRPProduction(models.Model):
         string='Material Cost',
         compute='_compute_wo_lines_costs_overview'
     )
+    wip2cogs_cleared = fields.Boolean("WIP2COGS Cleared?")
 
     @api.multi
     def _generate_additional_raw_move(self, product, quantity):
@@ -565,7 +570,7 @@ class MRPProduction(models.Model):
     def _cal_price(self, consumed_moves):
         """Set a price unit on the finished move according to `consumed_moves`.
         """
-        production_cost = ovh_cost = labor_cost = mtl_cost = 0.0
+        production_cost = mtl_cost = 0.0
         if consumed_moves:
             mtl_cost = sum([-m.value for m in consumed_moves])
             
@@ -579,25 +584,68 @@ class MRPProduction(models.Model):
         return True
 
     @api.multi
-    def create_cogs_entry(self):
-        # Create Journal Entry from WIP To COGS
+    def create_cogs_entry(self, job=False):
+        if not job:
+            return False
+        workorder = self.env['mrp.workorder']
+        combined_mo_move_lines = []
+        combined_material_name = job.name + '-Material'
+        combined_overhead_name = job.name + '-Burden'
+        combined_labor_name = job.name + '-Labor'
+        journal_id = False
+
+        # Create Journal Entry from WIP To COGS for one or more MOs related to Job
         for mo in self:
-            for wo in mo.workorder_ids:
-                wo._create_wip2cogs_labor_acc_move()
-            mo._create_wip2cogs_material_acc_move()
+            if not journal_id:
+                accounts = mo.product_id.product_tmpl_id.get_product_accounts()
+                journal_id = accounts['stock_journal'].id
+            mo_move_lines = mo._prepare_wip2cogs_material_acc_move()
+            if mo_move_lines:
+                combined_mo_move_lines.append(mo_move_lines[0])
+                combined_mo_move_lines.append(mo_move_lines[1])
+        # Create Single JE (WIP to COGS) for Material
+        if combined_mo_move_lines and journal_id:
+            self._create_wip2cogs_acc_move(move_lines=combined_mo_move_lines, name=combined_material_name, journal_id=journal_id)
+
+        # Create One JE for Labor and Overhead per each job irrespective of MO and WO
+        # Search all workorders and clear them from WIP to COGS
+        workorder_ids = workorder.search([('production_id','in', self.ids)])
+        combined_wo_overhead_move_lines = []
+        combined_wo_labor_move_lines = []
+        for wo in workorder_ids:
+            # Prepare Labor WIP TO COGS lines
+            wo_labor_move_lines = wo._prepare_wip2cogs_labor_acc_move()
+            if wo_labor_move_lines:
+                combined_wo_labor_move_lines.append(wo_labor_move_lines[0])
+                combined_wo_labor_move_lines.append(wo_labor_move_lines[1])
+
+            # Prepare Overhead WIP TO COGS lines
+            wo_overhead_move_lines = wo._prepare_wip2cogs_overhead_acc_move()
+            if wo_overhead_move_lines:
+                combined_wo_overhead_move_lines.append(wo_overhead_move_lines[0])
+                combined_wo_overhead_move_lines.append(wo_overhead_move_lines[1])
+
+        # Create Single JE (WIP to COGS) for labor
+        if combined_wo_labor_move_lines and journal_id:
+            self._create_wip2cogs_acc_move(move_lines=combined_wo_labor_move_lines, name=combined_labor_name, journal_id=journal_id)
+
+        # Create Single JE (WIP to COGS) for overhead
+        if combined_wo_overhead_move_lines and journal_id:
+            self._create_wip2cogs_acc_move(move_lines=combined_wo_overhead_move_lines, name=combined_overhead_name, journal_id=journal_id)
+
+        # Update all the MOs wip2cogs_cleared boolean
+        self.write({'wip2cogs_cleared':True})
         return True
 
-    def _create_wip2cogs_material_acc_move(self):
+    def _prepare_wip2cogs_material_acc_move(self):
         production = self
-        move_obj = self.env['account.move']
         material_cost = production.material_cost
         if material_cost == 0:
-            return True
+            return []
         product = production.product_id
 
         # Prepare accounts
         accounts = product.product_tmpl_id.get_product_accounts()
-        journal_id = accounts['stock_journal'].id
         production_account_id = accounts['production_account_id'].id
         # COGS Accounts
         expense_account_id = accounts['expense'].id
@@ -614,9 +662,7 @@ class MRPProduction(models.Model):
 
         # Create data for account move and post them
 
-        name = job_id and job_id.name + '-' + production.name or production.name
-        ref = job_id and job_id.name + '-' + production.name or production.name
-
+        name = ref = job_id and job_id.name + '-Material-' + production.name or production.name
 
         # WIP to COGS account move lines (Material)
         debit_line_vals = {
@@ -645,13 +691,14 @@ class MRPProduction(models.Model):
         }
 
         move_lines = [(0, 0, debit_line_vals), (0, 0, credit_line_vals)]
+        return move_lines
 
-        # WIP to COGS account move (Material)
-        if move_lines:
-            new_move = move_obj.create(
-                {'journal_id': journal_id,
-                    'line_ids': move_lines,
-                    'date': fields.Date.context_today(self),
-                    'ref': name or ''})
-            new_move.post()
-        return True
+    def _create_wip2cogs_acc_move(self, move_lines=False, name='', journal_id=False):
+        move_obj = self.env['account.move']
+        new_move = move_obj.create(
+            {'journal_id': journal_id,
+            'line_ids': move_lines,
+            'date': fields.Date.context_today(self),
+            'ref': name or ''})
+        new_move.post()
+        new_move.write({'ref':name or ''})

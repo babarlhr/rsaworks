@@ -27,17 +27,16 @@ class AccountInvoice(models.Model):
     @api.one
     def action_invoice_open(self):
         result = super(AccountInvoice, self).action_invoice_open()       
-        # Generate the Finish Goods to COGS entry for Consumable products
         # Check for SSI/ Redstick workflow here as Repair order vs normal SO
         for inv in self:
             for line in self.invoice_line_ids:
                 if line.ssi_job_id and line.product_id and line.product_id.type == 'consu'\
                     and line.product_id.product_tmpl_id.is_job_type:
-                    # Search unique MO with product_id and ssi_job_id
-                    MO_id = self.env['mrp.production'].search(
+                    # Search MO(s) related to given job
+                    MO_ids = self.env['mrp.production'].search(
                             [('ssi_job_id', '=', line.ssi_job_id.id),
-                            ('product_id','=', line.product_id.id)])
-                    if MO_id:
+                            ('wip2cogs_cleared', '=', False)])
+                    if MO_ids:
                         # Create WIP TO COGS JE for Labor, Burden and Material
-                        MO_id.create_cogs_entry()
+                        MO_ids.create_cogs_entry(job=line.ssi_job_id)
         return result
