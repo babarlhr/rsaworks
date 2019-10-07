@@ -24,7 +24,10 @@
 			  <xpath expr="//field[@name='origin']" position="after">
 				<field name="ssi_job_id"/>
 			  </xpath>
-		  </field>
+              <xpath expr="//form[1]/sheet[1]/group[1]/group[1]/field[@name='product_id']" position="attributes">
+                <attribute name="options">{'no_create': True, 'no_create_edit': True}</attribute>
+              </xpath>
+          </field>
       </record>
 
     </data>
