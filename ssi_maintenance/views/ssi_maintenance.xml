@@ -307,14 +307,14 @@
                     
                 <xpath expr="//field[@name='description']" position="after">
 <!--                     if maintenance_team_id.name !== Logistics -->
-                    <notebook  attrs ="{'invisible':[('maintenance_team_id','==', 2)]}">
+                    <notebook  attrs ="{'invisible':[('maintenance_team_id','==', 5)]}">
                             <page string="Checks">
                                 <group>
-                                    <field name="megger_test_motor" attrs ="{'required':[('maintenance_team_id','!=', 2)]}"/>
-                                    <field name="check_add_oil" attrs ="{'required':[('maintenance_team_id','!=', 2)]}"/>
-                                    <field name="rotate_the_shaft" attrs ="{'required':[('maintenance_team_id','!=', 2)]}"/>
-                                    <field name="verify_location" attrs ="{'required':[('maintenance_team_id','!=', 2)]}"/>
-                                    <field name="note_problem" attrs ="{'required':[('maintenance_team_id','!=', 2)]}"/>
+                                    <field name="megger_test_motor" attrs ="{'required':[('maintenance_team_id','!=', 5)]}"/>
+                                    <field name="check_add_oil" attrs ="{'required':[('maintenance_team_id','!=', 5)]}"/>
+                                    <field name="rotate_the_shaft" attrs ="{'required':[('maintenance_team_id','!=', 5)]}"/>
+                                    <field name="verify_location" attrs ="{'required':[('maintenance_team_id','!=', 5)]}"/>
+                                    <field name="note_problem" attrs ="{'required':[('maintenance_team_id','!=', 5)]}"/>
                                 </group>
 
                             </page>

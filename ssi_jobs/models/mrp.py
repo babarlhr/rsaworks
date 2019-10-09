@@ -63,3 +63,24 @@ class Prod(models.Model):
 
     ssi_job_id = fields.Many2one(
         'ssi_jobs', string='Job')
+    
+class Prod(models.Model):
+    _inherit = 'mrp.routing.workcenter'
+
+    time_cycle_hours = fields.Float(
+        'Hour Duration', compute='_compute_cycle_hours',
+        help="Time in hours.")
+    time_cycle_manual_hours = fields.Float(
+        'Manual Hour Duration', compute='_compute_cycle_manual_hours',
+        help="Time in hours.")
+
+    @api.depends('time_cycle')
+    def _compute_cycle_hours(self):
+        for record in self:
+            record.time_cycle_hours = record.time_cycle / 60
+
+    @api.depends('time_cycle_manual')
+    def _compute_cycle_manual_hours(self):
+        for record in self:
+            record.time_cycle_manual_hours = record.time_cycle_manual / 60
+

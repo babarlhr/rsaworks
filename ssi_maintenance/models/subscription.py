@@ -52,6 +52,7 @@ class SaleSubscription(models.Model):
         lines = []
         product =  self.env['product.product'].search([('storage_subscription', '=', True)], limit=1)
         for strg in self.storage_id:
+            raise UserError(strg.check_out)
             if not strg.check_out or strg.check_out.date() > strg.last_invoiced:
                 line_name = '%s (%s)' % (strg.equipment_id.name, strg.equip_serial_no)
                 uom =  self.env['uom.uom'].search([('id', '=', strg.subscription_uom.id)], limit=1)
