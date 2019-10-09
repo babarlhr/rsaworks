@@ -1,0 +1,25 @@
+# -*- coding: utf-8 -*-
+
+#################################################################################
+# Systems Services, Inc.
+# Desc: To extend sales order module to add non stock
+#################################################################################
+
+{
+    'name': 'SSI Non Stock',
+    'summary': "Adds Non Stock module to Odoo.",
+    'version': '1.0.1',
+    'category': 'SSI',
+    'author': 'Systems Services, Inc. '
+              'Chad Thompson',
+    'website': 'https://ssibtr.com',
+    "depends":  [
+        'base',
+        'sales'
+    ],
+    'data': [
+        'views/ssi_sales.xml',
+    ],
+    'installable': True,
+    'application': True,
+}
