@@ -15,7 +15,7 @@
     "website":  "https://ssibtr.com",
     "depends":  [
         'hr_attendance',
-#         'hr_leave',
+        'hr_holidays',
         'mrp',
         'ssi_jobs'
     ],
@@ -26,9 +26,9 @@
         'views/templates.xml',
         'views/attendanceReport.xml'
     ],
-    # 'qweb': [
-    #     "static/src/xml/attendance.xml",
-    # ],
+    'qweb': [
+        "static/src/xml/attendance.xml",
+    ],
 
     "application":  False,
     "installable":  True,

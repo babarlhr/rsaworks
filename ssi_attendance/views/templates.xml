@@ -92,12 +92,23 @@
             </field>
         </record> -->
 
-        <template id="assets_backend" name="custom assets" inherit_id="web.assets_backend">
-            <xpath expr="." position="inside">
-                <script type="text/javascript" src="/ssi_attendance/static/src/js/custom.js"></script>
+        <template id="ssi_assets_backend" name="custom assets" inherit_id="hr_attendance.assets_backend">
+            <xpath expr="//script[@src='/hr_attendance/static/src/js/employee_kanban_view_handler.js']" position="replace">
+                <script type="text/javascript" src="/ssi_attendance/static/src/js/ssi_employee_kanban_view_handler.js"></script>
+            </xpath>
+            <xpath expr="//script[@src='/hr_attendance/static/src/js/greeting_message.js']" position="replace">
+                <script type="text/javascript" src="/ssi_attendance/static/src/js/ssi_greeting_message.js"></script>
+            </xpath>
+            <xpath expr="//script[@src='/hr_attendance/static/src/js/kiosk_confirm.js']" position="replace">
+                <script type="text/javascript" src="/ssi_attendance/static/src/js/ssi_kiosk_confirm.js"></script>
+            </xpath>
+            <xpath expr="//script[@src='/hr_attendance/static/src/js/kiosk_mode.js']" position="replace">
+                <script type="text/javascript" src="/ssi_attendance/static/src/js/ssi_kiosk_mode.js"></script>
+            </xpath>
+            <xpath expr="//script[@src='/hr_attendance/static/src/js/my_attendances.js']" position="replace">
+                <script type="text/javascript" src="/ssi_attendance/static/src/js/ssi_my_attendances.js"></script>
             </xpath>
         </template>
-
 
 
 
