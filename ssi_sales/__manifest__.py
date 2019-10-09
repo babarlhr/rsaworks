@@ -15,7 +15,7 @@
     'website': 'https://ssibtr.com',
     "depends":  [
         'base',
-        'sales'
+        'sale'
     ],
     'data': [
         'views/ssi_sales.xml',
