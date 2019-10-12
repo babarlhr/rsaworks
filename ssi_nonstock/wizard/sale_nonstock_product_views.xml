@@ -7,10 +7,11 @@
             <field name="arch" type="xml">
                 <form>
                     <group>
-                        <field name="product_template_id" class="oe_product_nonstock_product_template_id" />
+                        <field name="product_template_id" domain="[('categ_id.name','=','Nonstock')]"/>
+                        <field name="partner_id" domain="[('supplier','=',True)]"/>
                     </group>
                     <footer>
-                        <button string="Add" class="btn-primary o_sale_product_nonstock_add disabled"/>
+                        <button name="copy_nonstock" string="Add" type="object"/>
                         <button string="Cancel" class="btn-secondary" special="cancel"/>
                     </footer>
                 </form>
