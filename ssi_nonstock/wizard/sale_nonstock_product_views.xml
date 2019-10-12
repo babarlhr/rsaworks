@@ -7,11 +7,17 @@
             <field name="arch" type="xml">
                 <form>
                     <group>
-                        <field name="product_template_id" domain="[('categ_id.name','=','Nonstock')]"/>
-                        <field name="partner_id" domain="[('supplier','=',True)]"/>
+                        <group>
+                            <field name="product_template_id" domain="[('categ_id.name','=','Nonstock')]"/>
+                            <field name="price" required="1" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </group>
+                        <group>
+                            <field name="partner_id" domain="[('supplier','=',True)]"/>
+                            <field name="cost" required="1" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </group>
                     </group>
                     <footer>
-                        <button name="copy_nonstock" string="Add" type="object"/>
+                        <button name="copy_nonstock" string="Create/Add Nonstock" type="object"/>
                         <button string="Cancel" class="btn-secondary" special="cancel"/>
                     </footer>
                 </form>
