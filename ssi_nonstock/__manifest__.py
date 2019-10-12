@@ -19,6 +19,7 @@
     ],
     'data': [
         'views/ssi_sales.xml',
+        'wizard/sale_nonstock_product_views.xml',
     ],
     'installable': True,
     'application': True,

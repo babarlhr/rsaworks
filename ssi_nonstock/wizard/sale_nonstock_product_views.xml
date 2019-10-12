@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="sale_nonstock_product_view_form" model="ir.ui.view">
+            <field name="name">sale.nonstock.product.view.form</field>
+            <field name="model">sale.nonstock.product</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <field name="product_template_id" class="oe_product_nonstock_product_template_id" />
+                    </group>
+                    <footer>
+                        <button string="Add" class="btn-primary o_sale_product_nonstock_add disabled"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+    
+        <record model="ir.actions.act_window" id="add_nonstock_product_view">
+            <field name="name">Add Nonstock Product</field>
+            <field name="res_model">sale.nonstock.product</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="sale_nonstock_product_view_form"/>
+            <field name="view_type">form</field>
+            <field name="target">new</field>
+        </record>        
+
+    </data>
+</odoo>
