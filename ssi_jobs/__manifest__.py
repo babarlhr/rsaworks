@@ -40,7 +40,7 @@
         'report/ssi_job_cost_report.xml',
         'report/ssi_picking.xml',
         'report/ssi_report_templates.xml',
-        # 'views/assets.xml',
+        'views/assets.xml',
     ],
     'installable': True,
     'application': True,
