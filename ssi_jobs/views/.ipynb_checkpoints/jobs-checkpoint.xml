@@ -76,7 +76,7 @@
                         <field name="aa_id"/>
                         <field name="warranty_claim"/>
                         <field name="warranty_status" attrs="{'invisible': [('warranty_claim', '!=', True)]}"/>
-                        <field name="completed_on" attrs="{'readonly': True}"/>
+                        <field name="completed_on"/>
                     </group>
                 </group>
             <notebook>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Scheduler -->
+        <record forcecreate="True" id="ir_cron_job_kiosk_action" model="ir.cron">
+            <field name="name">Job Kiosk Flag</field>
+            <field name="model_id" ref="model_ssi_jobs"/>
+            <field name="state">code</field>
+            <field name="code">
+model.run_job_kiosk_scheduler()
+            </field>
+            <field eval="True" name="active"/>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">hours</field>
+            <field name="numbercall">-1</field>
+            <field eval="False" name="doall"/>
+        </record>
+    </data>
+</odoo>
