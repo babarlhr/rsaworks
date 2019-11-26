@@ -13,7 +13,7 @@ class MaintenanceEquipment(models.Model):
     location = fields.Char('Location', compute='_compute_current_location')
 #     equip_id = fields.Char(string='Equip_id')
     description = fields.Char(string='Description')
-    rating = fields.Float(string='Rating')
+    rating = fields.Float(string='Rating', digits=(12,0))
     rating_unit = fields.Selection(
         [('HP', 'HP'), ('KW', 'KW'), ('FT-lbs', 'FT-lbs'), ('MW', 'MW')], string='Rating Unit')
     poles = fields.Selection([('2', '2'), ('4', '4'), ('6', '6'), ('8', '8'), ('10', '10'), ('12', '12'), ('14', '14'), ('16', '16'), ('18', '18'), ('20', '20'), ('22', '22'), ('24', '24'), (
@@ -55,7 +55,7 @@ class MaintenanceEquipment(models.Model):
     direction_of_rotation = fields.Selection([('CW from NDE', 'CW from NDE'), ('CCW from NDE', 'CCW from NDE'), (
         'Bi Directional', 'Bi Directional'), ('Unknown', 'Unknown')], string='Direction of rotation')
     jbox_location = fields.Selection(
-        [('F1', 'F1'), ('F2', 'F2'), ('F3', 'F3')], string='J-Box location')
+        [('F1', 'F1'), ('F2', 'F2'), ('F3', 'F3'), ('Other', 'Other')], string='J-Box location')
     r_voltage = fields.Float(string='R Voltage ')
     r_amps = fields.Float(string='R Amps')
     excit_type = fields.Char(string='Excit Type')
@@ -71,23 +71,17 @@ class MaintenanceEquipment(models.Model):
     additional_length = fields.Float(string='Additional Length')
     width = fields.Float(string='Width')
     additional_width = fields.Float(string='Additional Width')
-    square_feet = fields.Float(string='Square Feet')
+    square_feet = fields.Float(string='Square Feet', compute='_compute_square_feet')
     weight = fields.Float(string='Weight')
     height = fields.Float(string='Height')
     stock_number = fields.Char(string='Stock Number')
-
-    storage_ids = fields.One2many(
-        'storage', 'equipment_id', string='Storages')
-
-    customer_id = fields.Many2one(
-        'res.partner', string='Customer', domain="[('customer', '=', 1)]")
-
-    ssi_jobs_count = fields.Integer(
-        string='Jobs', compute='_get_ssi_jobs_count')
-
+    storage_ids = fields.One2many('storage', 'equipment_id', string='Storages')
+    customer_id = fields.Many2one('res.partner', string='Customer', domain="[('customer', '=', 1)]")
+    ssi_jobs_count = fields.Integer(string='Jobs', compute='_get_ssi_jobs_count')
     ui_rated = fields.Selection(
         [('Yes', 'Yes'), ('No', 'No')], string='UI Rated')
     ui_rating = fields.Char(string='UI Rating')
+    project_manager = fields.Many2one('res.users', related='customer_id.project_manager_id', string='Project Manager')
 
     @api.model
     def create(self, vals):
@@ -106,6 +100,11 @@ class MaintenanceEquipment(models.Model):
             for strg in rec.storage_ids:
                 loc = strg.location_id
             rec.location = loc
+
+    @api.depends('width', 'length', 'additional_width', 'additional_length')
+    def _compute_square_feet(self):
+        for rec in self:
+            rec.square_feet = (rec.length+rec.additional_length) * (rec.width+rec.additional_width)
 
     @api.depends('description')
     def _get_ssi_jobs_count(self):
@@ -150,13 +149,14 @@ class MaintenanceEquipment(models.Model):
         )
         json_login_response = login_response.json()
         token = json_login_response['data']['token']
+        job = self.env['ssi_jobs'].search([('equipment_id', '=', self.id), ('stage_id', '!=', 'Job Complete')], limit=1)
         nameplate_response = requests.get(
-            'http://api.springpt.com:38136/api/v1/RSReturnNamePlate/EM-1000',
+            'http://api.springpt.com:38136/api/v1/RSReturnNamePlate/'+job.name,
             headers={'x-access-token': token}
         )
         nameplate_response_json = nameplate_response.json()
         nameplate_data = nameplate_response_json['data']
-#         raise UserError(_(nameplate_data[0]['Equip ID']))
+#         raise UserError(_(token))
 # 
         self.write({
 #             'equip_id': nameplate_data[0]['Equip ID'],

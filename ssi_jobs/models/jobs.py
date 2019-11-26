@@ -282,17 +282,27 @@ class Jobs(models.Model):
             record.wc_count = dic.get(
                 record.id, 0)
 
-    @api.onchange('stage_id')
-    def _change_complete(self):
-        if self.stage_id.id == 15:
-            self.completed_on = fields.Datetime.now()
-        else:
-            self.completed_on = ''
+    @api.multi
+    def write(self, vals):
+        # stage change: update date_last_stage_update
+        if 'stage_id' in vals: 
+            if vals['stage_id'] == 7:
+                vals['completed_on'] = fields.Datetime.now()
+            elif vals['stage_id'] < 7: 
+                vals['completed_on'] = False
+        return super(Jobs, self).write(vals)
 
+#     @api.onchange('stage_id')
+#     def _change_complete(self):
+#         if self.stage_id.id == 15:
+#             self.completed_on = fields.Datetime.now()
+#         else:
+#             self.completed_on = ''
+        
     @api.model
     def run_job_kiosk_scheduler(self):
         # Flip hid flag on kiosk for jobs completed 24 hours ago
-        jobs = self.env['ssi_jobs'].search([('stage_id', '=', 15)])
+        jobs = self.env['ssi_jobs'].search([('stage_id', '>=', 7)])
         for job in jobs:
             delta = fields.Datetime.now()-job.completed_on
             if delta > timedelta(minutes=5):

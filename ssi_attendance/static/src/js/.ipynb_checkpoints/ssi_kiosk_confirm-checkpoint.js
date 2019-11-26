@@ -204,12 +204,16 @@ var KioskConfirm = AbstractAction.extend({
           this._rpc({
             model: 'mrp.workorder',
             method: 'search_read',
-            args: [[['ssi_job_id.id', '=', job_id]]]
+            args: [[['ssi_job_id.id', '=', job_id], ['hide_in_kiosk', '=', false]]]
           }).then(function(results) {
             console.log(results);
             if (results) {
               results.forEach(function(w) {
-                html = html + `<option value="${w.id}">${w.display_name}</option>`;
+                  if (w.state == 'done') {
+                    html = html + `<option value="${w.id}" class="text-success font-weight-bold">${w.display_name}</option>`;
+                  } else{
+                    html = html + `<option value="${w.id}">${w.display_name}</option>`;
+                  }
               });
             }
             if (html === '') {
