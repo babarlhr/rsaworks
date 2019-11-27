@@ -20,6 +20,7 @@
     ],
     'data': [
         # 'views/ssi_accounting.xml',
+        'views/ssi_reports.xml',
         'report/ssi_gross_margin_report.xml',
         'report/ssi_wip_report.xml',
     ],
