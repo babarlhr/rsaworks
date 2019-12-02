@@ -2,28 +2,23 @@
 
 #################################################################################
 # Systems Services, Inc.
-# Desc: To extend accounting modules
+# Desc: To extend expemses module to add fields
 #################################################################################
 
 {
-    'name': 'SSI Accounting',
-    'summary': "Accounting Customizations",
-    'version': '1.0.1',
+    'name': 'SSI Expenses',
+    'summary': "Adds Fields to Expenses module.",
+    'version': '1.0.0',
     'category': 'SSI',
     'author': 'Systems Services, Inc. '
               'Chad Thompson',
     'website': 'https://ssibtr.com',
     "depends":  [
         'base',
-        'account',
-        'ssi_lead',
-        'account_reports'
+        'hr_expense',
     ],
     'data': [
-        # 'views/ssi_accounting.xml',
-        'views/ssi_reports.xml',
-        'report/ssi_gross_margin_report.xml',
-        'report/ssi_wip_report.xml',
+        'views/ssi_expenses.xml',
     ],
     'installable': True,
     'application': False,

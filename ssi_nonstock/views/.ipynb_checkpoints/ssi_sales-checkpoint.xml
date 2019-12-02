@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <data>
+
+    <record id="ssi_sale_order_nonstock_form" model="ir.ui.view">
+        <field name="name">ssi_sale.order.nonstock.form</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form/sheet/notebook/page/field[@name='note']" position="before">
+                <div>
+                    <button name="add_nontstock_product" string="Add Nonstock" type="object" context="{'active_id': active_id}"/>
+                    <!-- button name="662" string="Add Nonstock" type="action" states="draft,sent"/ -->
+                </div>
+            </xpath>
+
+        </field>
+    </record>
+        
+    </data>
+
+</odoo>

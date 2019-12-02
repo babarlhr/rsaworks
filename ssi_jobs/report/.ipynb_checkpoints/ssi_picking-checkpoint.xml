@@ -1,0 +1,33 @@
+<odoo>
+    <template id="ssi_report_picking" inherit_id="stock.report_picking">
+      <xpath expr="/t/t/t/t/div/table[1]/thead/tr/th[1]" position="before">
+        <t t-if="docs.so_job_id or docs.po_job_id">
+            <th>
+              <span>Job Name</span>
+            </th>
+        </t>
+      </xpath>
+      <xpath expr="/t/t/t/t/div/table[1]/tbody/tr/td[1]" position="before">
+        <t t-if="docs.so_job_id or docs.po_job_id">
+            <td>
+              <span t-field="o.so_job_id.name"/>
+              <span t-field="o.po_job_id.name"/>
+            </td>
+        </t>
+      </xpath>
+      <xpath expr="/t/t/t/t/div/table[2]/thead/tr/th[1]" position="after">
+        <t t-if="docs.picking_type_id.code=='incoming'">
+        <th>
+          <span>Job Name</span>
+        </th>
+        </t>
+      </xpath>
+      <xpath expr="/t/t/t/t/div/table[2]/tbody/t/t/tr/td[1]" position="after">
+        <t t-if="docs.picking_type_id.code=='incoming'">
+        <td>
+          <span t-field="move.purchase_line_id.account_analytic_id.name"/>
+        </td>
+        </t>
+      </xpath>
+    </template>
+</odoo>

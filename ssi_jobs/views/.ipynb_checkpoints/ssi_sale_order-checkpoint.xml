@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <data>
+
+      <record model="ir.ui.view" id="ssi_sale_order_form">
+          <field name="name">ssi_sale_order_form</field>
+          <field name="model">sale.order</field>
+          <field name="inherit_id" ref="sale.view_order_form"/>
+          <field name="type">form</field>
+          <field name="arch" type="xml">
+              <xpath expr="//form[1]/sheet[1]/notebook[1]/page[@name='order_lines']/field[@name='order_line']/tree[1]/field[@name='product_id']" position="attributes">
+                <attribute name="options">{'no_create': True, 'no_create_edit': True}</attribute>
+              </xpath>
+              <xpath expr="//field[@name='payment_mode_id']" position="after">
+                <field name="ssi_job_id"/>
+              </xpath>
+          </field>
+      </record>
+	  
+      <record model="ir.ui.view" id="ssi_sale_order_tree">
+          <field name="name">ssi_sale_order_tree</field>
+          <field name="model">sale.order</field>
+          <field name="inherit_id" ref="sale.view_order_tree"/>
+          <field name="type">tree</field>
+          <field name="arch" type="xml">
+              <xpath expr="//field[@name='name']" position="before">
+                <field name="ssi_job_id"/>
+                <field name="job_stage"/>
+              </xpath>
+          </field>
+      </record>
+	  
+        <report 
+            id="action_report_saleorder_no_print"
+            string="Quotation / Order - Show All"
+            model="sale.order" 
+            report_type="qweb-pdf"
+            file="ssi_jobs.report_saleorder_no_print" 
+            name="ssi_jobs.report_saleorder_no_print"
+            print_report_name="(object.state in ('draft', 'sent') and 'Quotation - %s' % (object.name)) or 'Order - %s' % (object.name)"
+        />
+
+    </data>
+</odoo>
+

@@ -33,7 +33,7 @@
                     <div t-if="checked_in">
                     <form>
                       <div class="form-group row">
-                        <div class="col-sm-3">
+                        <div class="col-sm-3 text-right">
                             <label style="fontSize: 8px" for="exampleFormControlSelect1">Jobs</label>
                         </div>
                         <div class="col-sm-8">
@@ -63,7 +63,7 @@
                             </select>
                         </div>
                         <div class="col-sm-3">
-                            <input type="checkbox" class="custom_control_input" name="close_wo" data-toggle="tooltip" data-placement="top" title="Close Work Order"/> Close
+                            <input type="checkbox" class="custom_control_input close-wo" name="close-wo" data-toggle="tooltip" data-placement="top" title="Close Work Order"/> Close
                         </div>
                       </div>
                     </form>
