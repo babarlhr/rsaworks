@@ -123,7 +123,7 @@ class HrEmployeeCustom(models.Model):
         return {'warning': ''}
 
     @api.multi
-    def attendance_split_time(self, next_action, job=None, wo=None, end=None):
+    def attendance_split_time(self, next_action, job=None, wo=None, close=None, end=None):
         """ Allows employee to split time.
             Returns an action to the check in/out message,
             next_action defines which menu the check in/out message should return to. ("My Attendances" or "Kiosk Mode")
