@@ -74,6 +74,7 @@ var KioskConfirm = AbstractAction.extend({
                       this.$('.o_hr_attendance_PINbox').val(),
                       this.$('#job-select').val(),
                       this.$('#wo-select').val(),
+                      this.$('.close-wo:checked').val(),
                       end_job
                     ]
                 })
@@ -100,6 +101,7 @@ var KioskConfirm = AbstractAction.extend({
                       this.$('.o_hr_attendance_PINbox').val(),
                       this.$('#job-select').val(),
                       this.$('#wo-select').val(),
+                      this.$('.close-wo:checked').val(),
                       end_job
                     ]
                 })
@@ -139,12 +141,16 @@ var KioskConfirm = AbstractAction.extend({
             var end_job = 'True';
             var job = [];
             var wo = [];
+            var close = [];
             
             this.$('.job-select').each(function(i) {
                 if (this.value) {job[i] = this.value};
             });
             this.$('.wo-select').each(function(i) {
                 if (this.value) {wo[i] = this.value};
+            });
+            this.$('.close-wo').each(function(i) {
+                if (this.value) {close[i] = this.value};
             });
             this._rpc({
                     model: 'hr.employee',
@@ -154,6 +160,7 @@ var KioskConfirm = AbstractAction.extend({
                         this.next_action,
                         job,
                         wo,
+                        close,
                         end_job
                     ],
                 })
@@ -170,12 +177,16 @@ var KioskConfirm = AbstractAction.extend({
             var end_job = 'False';
             var job = [];
             var wo = [];
+            var close = [];
             
             this.$('.job-select').each(function(i) {
                 if (this.value) {job[i] = this.value};
             });
             this.$('.wo-select').each(function(i) {
                 if (this.value) {wo[i] = this.value};
+            });
+            this.$('.close-wo').each(function(i) {
+                if (this.value) {close[i] = this.value};
             });
             this._rpc({
                     model: 'hr.employee',
@@ -185,6 +196,7 @@ var KioskConfirm = AbstractAction.extend({
                         this.next_action,
                         job,
                         wo,
+                        close,
                         end_job
                     ],
                 })
@@ -204,12 +216,16 @@ var KioskConfirm = AbstractAction.extend({
           this._rpc({
             model: 'mrp.workorder',
             method: 'search_read',
-            args: [[['ssi_job_id.id', '=', job_id]]]
+            args: [[['ssi_job_id.id', '=', job_id], ['hide_in_kiosk', '=', false]]]
           }).then(function(results) {
             console.log(results);
             if (results) {
               results.forEach(function(w) {
-                html = html + `<option value="${w.id}">${w.display_name}</option>`;
+                  if (w.state == 'done') {
+                    html = html + `<option value="${w.id}" class="text-success font-weight-bold">${w.display_name}</option>`;
+                  } else{
+                    html = html + `<option value="${w.id}">${w.display_name}</option>`;
+                  }
               });
             }
             if (html === '') {
@@ -237,7 +253,7 @@ var KioskConfirm = AbstractAction.extend({
         this._rpc({
             model: 'ssi_jobs',
             method: 'search_read',
-            args: [[]]
+            args: [[['hide_in_kiosk', '=', false]], [], [], [], 'name']
         }).then(function(result) {
             var ele = {id:'', display_name:'Please Select a Job'};
             self.jobs = result;

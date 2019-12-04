@@ -31,30 +31,47 @@
 
 
                     <div t-if="checked_in">
-
-                      <!-- <div class="checkbox">
-                        <label>
-                          <input id="end-job" type="checkbox"/>End job for the day
-                        </label>
-                      </div> -->
-
-                      <!-- div class="form-check">
-                        <input class="form-check-input" type="radio" name="end-job" id="end-job1" value="True" />
-                        <label class="form-check-label" for="end-job1">
-                          Clock Out
-                        </label>
+                    <form>
+                      <div class="form-group row">
+                        <div class="col-sm-3 text-right">
+                            <label style="fontSize: 8px" for="exampleFormControlSelect1">Jobs</label>
+                        </div>
+                        <div class="col-sm-8">
+                            <select id="job-select" class="form-control job-select text-right" data-wo="#wo-select">
+                                <t t-foreach="widget.jobs" t-as="j">
+                                    <option t-att-value="j.id">
+                                        <t t-esc="j.display_name"></t>
+                                    </option>
+                                </t>                            
+                            </select>
+                        </div>
                       </div>
-                      <div class="form-check">
-                        <input class="form-check-input" type="radio" name="end-job" id="end-job2" value="False" checked="checked" />
-                        <label class="form-check-label" for="end-job2">
-                          Switch Job
-                        </label>
-                      </div -->
-
-
+                      <div class="form-group row">
+                        <div class="col-sm-3 text-right">
+                            <label style="fontSize: 8px" for="">Work Order</label>
+                        </div>
+                        <div class="col-sm-6">
+                            <select id="wo-select" class="form-control wo-select">
+                              <option t-if="!widget.wos" value="">
+                                  Select Job to see Work Orders
+                              </option>
+                              <t  t-if="widget.wos" t-foreach="widget.wos" t-as="wo">
+                                    <option t-att-value="wo.id">
+                                        <t t-esc="wo.display_name"></t>
+                                    </option>
+                              </t>    
+                            </select>
+                        </div>
+                        <div class="col-sm-3">
+                            <input type="checkbox" class="custom_control_input close-wo" name="close-wo" data-toggle="tooltip" data-placement="top" title="Close Work Order"/> Close
+                        </div>
+                      </div>
+                    </form>
+      
+                    <!-- form class="form">
                       <div class="row">
-                        <div class="col-md-6">
-                          <div class="form-group">
+                        <div class="col-md-12">
+                          <div class="form-group row">
                             <label style="fontSize: 8px" for="exampleFormControlSelect1">Jobs</label>
                             <select id="job-select" class="form-control job-select" data-wo="#wo-select">
                                 <t t-foreach="widget.jobs" t-as="j">
@@ -65,9 +82,10 @@
                             </select>
                           </div>
                         </div>
-
-                        <div class="col-md-6">
-                          <div class="form-group">
+                      </div>
+                      <div class="row">
+                        <div class="col-md-12">
+                          <div class="form-group row">
                             <label style="fontSize: 8px" for="">Work Orders</label>
                             <select id="wo-select" class="form-control wo-select">
                               <option t-if="!widget.wos" value="">
@@ -81,20 +99,9 @@
                             </select>
                           </div>
                         </div>
-
-                        <!-- <div class="col-md-4">
-                          <div class="form-group">
-                              <label style="fontSize: 8px" for="exampleFormControlSelect1">Labor Codes</label>
-                              <select id="lc-select" class="form-control">
-                                  <t t-foreach="widget.lcs" t-as="lc">
-                                      <option t-att-value="lc.id">
-                                          <t t-esc="lc.display_name"></t>
-                                      </option>
-                                  </t>                            
-                              </select>
-                          </div>
-                        </div> -->
                       </div>
+                    </form -->
+
                     </div>
 
 

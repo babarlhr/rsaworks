@@ -18,15 +18,15 @@ class HrEmployeeCustom(models.Model):
     _inherit = "hr.employee"
 
     @api.multi
-    def attendance_manual(self, next_action, entered_pin=None, job=None, wo=None, end=None):
+    def attendance_manual(self, next_action, entered_pin=None, job=None, wo=None, close=None, end=None):
         self.ensure_one()
         if not (entered_pin is None) or self.env['res.users'].browse(SUPERUSER_ID).has_group('hr_attendance.group_hr_attendance_use_pin') and (self.user_id and self.user_id.id != self._uid or not self.user_id):
             if entered_pin != self.pin:
                 return {'warning': _('Wrong PIN')}
-        return self.attendance_action(next_action, job, wo, end)
+        return self.attendance_action(next_action, job, wo, close, end)
 
     @api.multi
-    def attendance_action(self, next_action, job=None, wo=None, end=None):
+    def attendance_action(self, next_action, job=None, wo=None, close=None, end=None):
         """ Changes the attendance of the employee.
             Returns an action to the check in/out message,
             next_action defines which menu the check in/out message should return to. ("My Attendances" or "Kiosk Mode")
@@ -41,11 +41,19 @@ class HrEmployeeCustom(models.Model):
         if self.user_id:
             if next_action == 'hr_attendance.hr_attendance_action_kiosk_mode':           
                 modified_attendance = self.sudo(self.user_id.id).attendance_action_change_k(job, wo, end)
+                if close:
+                    work_order = self.env['mrp.workorder'].search([('id', '=', wo)], limit=1)
+                    if work_order:
+                        work_order.state = 'done'
             else:
                 modified_attendance = self.sudo(self.user_id.id).attendance_action_change()
         else:
             if next_action == 'hr_attendance.hr_attendance_action_kiosk_mode':           
                 modified_attendance = self.sudo().attendance_action_change_k(job, wo, end)
+                if close:
+                    work_order = self.env['mrp.workorder'].search([('id', '=', wo)], limit=1)
+                    if work_order:
+                        work_order.state = 'done'
             else:
                 modified_attendance = self.sudo().attendance_action_change()
         action_message['attendance'] = modified_attendance.read()[0]
@@ -115,7 +123,7 @@ class HrEmployeeCustom(models.Model):
         return {'warning': ''}
 
     @api.multi
-    def attendance_split_time(self, next_action, job=None, wo=None, end=None):
+    def attendance_split_time(self, next_action, job=None, wo=None, close=None, end=None):
         """ Allows employee to split time.
             Returns an action to the check in/out message,
             next_action defines which menu the check in/out message should return to. ("My Attendances" or "Kiosk Mode")

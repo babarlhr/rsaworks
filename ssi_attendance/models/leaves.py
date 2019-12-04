@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from datetime import datetime, time
+from pytz import timezone, UTC
+
 from odoo import api, fields, models, tools, _
 from odoo.exceptions import UserError
-from pytz import utc
 from collections import defaultdict
-import datetime
+from odoo.addons.resource.models.resource import float_to_time, HOURS_PER_DAY
 
 class HrLeaves(models.Model):
     _inherit = 'hr.leave'
@@ -26,9 +28,9 @@ class HrLeaves(models.Model):
 #             raise UserError(_(work_hours_data))
             for index, (day_date, work_hours_count) in enumerate(work_hours_data):
                 
-                check_in = datetime.datetime(day_date.year, day_date.month, day_date.day, 8, 0, 0)
+                check_in = datetime(day_date.year, day_date.month, day_date.day, 8, 0, 0)
                 check_out_time = 8 + int(work_hours_count)
-                check_out = datetime.datetime(day_date.year, day_date.month, day_date.day, check_out_time, 0, 0)
+                check_out = datetime(day_date.year, day_date.month, day_date.day, check_out_time, 0, 0)
 #                 raise UserError(check_out)
                 
                 self.env['hr.attendance'].create({
