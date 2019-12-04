@@ -22,6 +22,7 @@ class WO(models.Model):
         readonly=True, store=True)
     job_urgency = fields.Selection(related='ssi_job_id.urgency', string="Urgency", store=True, readonly=True)
     job_deadline = fields.Datetime(related='ssi_job_id.deadline_date', string="Deadline", store=True, readonly=True)
+    hide_in_kiosk = fields.Boolean(related='operation_id.hide_in_kiosk', string="Hide in Kiosk", store=True, readonly=True)
 
 
     @api.depends('duration_expected')
@@ -99,6 +100,7 @@ class Prod(models.Model):
     time_cycle_manual_hours = fields.Float(
         'Manual Hour Duration', compute='_compute_cycle_manual_hours',
         help="Time in hours.")
+    hide_in_kiosk = fields.Boolean(default=False, string="Hide in Kiosk")
 
     @api.depends('time_cycle')
     def _compute_cycle_hours(self):

@@ -63,6 +63,7 @@
                         <field name="equipment_id" context="{'customer_id': partner_id}" domain="[('customer_id', '=', partner_id)]"/>
                         <field name="deadline_date"/>
                         <field name="ready_for_pickup"/>
+                        <field name="hide_in_kiosk" attrs="{'readonly': [('stage_id', '=', 15)]}"/>
                     </group>
                     <group name="right">
                         <field name="urgency"/>
@@ -75,6 +76,7 @@
                         <field name="aa_id"/>
                         <field name="warranty_claim"/>
                         <field name="warranty_status" attrs="{'invisible': [('warranty_claim', '!=', True)]}"/>
+                        <field name="completed_on" attrs="{'readonly': True}"/>
                     </group>
                 </group>
             <notebook>
@@ -231,7 +233,7 @@
     <field name="model">ssi_jobs</field>
     <field name="arch" type="xml">
         <search string="Search Jobs">
-            <field name="name" filter_domain="['|', ('name', 'ilike', self), ('code', 'ilike', self)]" string="Name or Number"/>
+            <field name="name" filter_domain="[('name', 'ilike', self)]" string="Name or Number"/>
             <field name="partner_id"/>
             <separator/>
             <filter name="inactive" string="Archived" domain="[('active', '=', False)]"/>

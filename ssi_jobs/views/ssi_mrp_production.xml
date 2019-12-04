@@ -128,6 +128,18 @@
           </field>
       </record>
 
+      <record model="ir.ui.view" id="ssi_mrp_routing_workcenter_form">
+          <field name="name">ssi_mrp_routing_workcenter_form</field>
+          <field name="model">mrp.routing.workcenter</field>
+          <field name="inherit_id" ref="mrp.mrp_routing_workcenter_form_view"/>
+          <field name="type">form</field>
+          <field name="arch" type="xml">
+              <xpath expr="//field[@name='sequence']" position="after">
+                  <field name="hide_in_kiosk"/>
+              </xpath>
+          </field>
+      </record>
+
     </data>
 </odoo>
 

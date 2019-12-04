@@ -78,6 +78,21 @@
               <xpath expr="//field[@name='user_id']" position="after">
                   <field name="project_manager"/>
               </xpath>
+              <xpath expr="//button[@id='account_invoice_payment_btn']" position="attributes">
+                  <attribute name="groups">account.group_account_user, account.group_tracie, account.group_brittany</attribute>
+              </xpath>
+          </field>
+      </record>
+
+        <record model="ir.ui.view" id="ssi_account_move_form">
+          <field name="name">ssi_account_move_form</field>
+          <field name="model">account.move</field>
+          <field name="inherit_id" ref="account.view_move_form"/>
+          <field name="type">tree</field>
+          <field name="arch" type="xml">
+              <xpath expr="//button[@name='action_post']" position="attributes">
+                  <attribute name="groups">account.group_account_manager</attribute>
+              </xpath>
           </field>
       </record>
 

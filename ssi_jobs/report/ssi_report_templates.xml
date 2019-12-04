@@ -196,5 +196,15 @@
                         </tbody>
     </xpath>
 </template>
+
+<template id="ssi_external_layout_standard" inherit_id="web.external_layout_standard">
+    <xpath expr="//div[3]/div/ul" position="replace">
+                <ul class="list-inline mb4">
+                    <li t-if="company.phone" class="list-inline-item">Phone: <span t-field="company.phone"/></li>
+                    <li t-if="company.email" class="list-inline-item">Email: <span t-field="company.email"/></li>
+                    <li t-if="company.website" class="list-inline-item">Web: <span t-field="company.website"/></li>
+                </ul>
+    </xpath>
+</template>
     
 </odoo>

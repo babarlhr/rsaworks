@@ -1,6 +1,6 @@
 
 from odoo import api, fields, models, _
-from datetime import datetime
+from datetime import datetime, timedelta
 from odoo.exceptions import UserError
 import requests
 
@@ -15,7 +15,8 @@ class Jobs(models.Model):
         'sale.order', 'ssi_job_id', string='SO')
     order_total = fields.Monetary(
         string='Order Total', track_visibility='always', related='so_ids.amount_total')
-    po_count = fields.Integer(string='Purchase Order', compute='_get_po_count')
+#     po_count = fields.Integer(string='Purchase Order', compute='_get_po_count')
+    po_count = fields.Integer(string='Purchase Order', default=0)
     ai_count = fields.Integer(string='Vendor Bills', compute='_get_ai_count')
     prod_count = fields.Integer(string='Operations', compute='_get_prod_count')
     wo_count = fields.Integer(string='Work Orders', compute='_get_wo_count')
@@ -23,7 +24,8 @@ class Jobs(models.Model):
     currency_id = fields.Many2one('res.currency', string='Account Currency',
                                   help="Forces all moves for this account to have this account currency.")
     stage_id = fields.Many2one('ssi_jobs_stage', group_expand='_read_group_stage_ids',
-                               default=lambda self: self.env['ssi_jobs_stage'].search([('name', '=', 'New Job')]), string='Stage')
+                               default=lambda self: self.env['ssi_jobs_stage'].search([('name', '=', 'New Job')]), string='Stage',
+                               track_visibility='onchange')
 #     name = fields.Char(string="Job Name", required=True, copy=False, readonly=True,
 #                        index=True, default=lambda self: _('New'))
     name = fields.Char(string="Job Name", required=True, copy=False, index=True)
@@ -52,6 +54,8 @@ class Jobs(models.Model):
     warranty_status = fields.Selection(
         [('warranty', 'Warranty'), ('concession', 'Customer Concession'), ('not warrantied', 'Not Warrantied')], 
         string='Warranty Status', track_visibility='onchange')
+    hide_in_kiosk = fields.Boolean(default=False, string="Hide in Kiosk")
+    completed_on = fields.Datetime(string='Completed On')
     
     _sql_constraints = [(
         'name_unique',
@@ -223,15 +227,16 @@ class Jobs(models.Model):
         action['domain'] = [('ssi_job_id', '=', self.id)]
         return action
 
-    @api.depends('order_total')
-    def _get_po_count(self):
-        results = self.env['purchase.order.line'].read_group(
-            domain=[('account_analytic_id', '=', self.aa_id.id)],
-            fields=['account_analytic_id'], groupby=['account_analytic_id']
-        )
-        for res in results:
-            for job in self:
-                job.po_count = res['account_analytic_id_count']
+#     @api.depends('order_total')
+#     def _get_po_count(self):
+#         results = self.env['purchase.order.line'].read_group(
+#             domain=[('account_analytic_id', '=', self.aa_id.id)],
+#             fields=['account_analytic_id'], groupby=['account_analytic_id']
+#         )
+#         for res in results:
+#             for job in self:
+#                 job.po_count = res['account_analytic_id_count']
+#         self.po_count = 0
 
     @api.depends('order_total')
     def _get_ai_count(self):
@@ -276,6 +281,32 @@ class Jobs(models.Model):
         for record in self:
             record.wc_count = dic.get(
                 record.id, 0)
+
+    @api.multi
+    def write(self, vals):
+        # stage change: update date_last_stage_update
+        if 'stage_id' in vals: 
+            if vals['stage_id'] == 7:
+                vals['completed_on'] = fields.Datetime.now()
+            elif vals['stage_id'] < 7: 
+                vals['completed_on'] = False
+        return super(Jobs, self).write(vals)
+
+#     @api.onchange('stage_id')
+#     def _change_complete(self):
+#         if self.stage_id.id == 15:
+#             self.completed_on = fields.Datetime.now()
+#         else:
+#             self.completed_on = ''
+        
+    @api.model
+    def run_job_kiosk_scheduler(self):
+        # Flip hid flag on kiosk for jobs completed 24 hours ago
+        jobs = self.env['ssi_jobs'].search([('stage_id', '>=', 7)])
+        for job in jobs:
+            delta = fields.Datetime.now()-job.completed_on
+            if delta > timedelta(minutes=5):
+                job.hide_in_kiosk = True
 
 #     @api.depends('order_total')
 #     def _get_aa_count(self):
