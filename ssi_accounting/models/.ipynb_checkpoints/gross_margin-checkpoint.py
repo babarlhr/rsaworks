@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import time
+import json
 from odoo import api, models, _
 from odoo.tools.misc import formatLang
 from odoo.exceptions import UserError
@@ -16,17 +17,75 @@ class ReportGrossMargin(models.AbstractModel):
     filter_date = {'date_from': '', 'date_to': '', 'filter': 'this_month'}
     filter_all_entries = False
 
+    def _get_super_columns(self, options):
+        if options.get('custom') == 'jeanne':
+            columns = [{'string': _('Disassembly')}]
+            columns += [{'string': _('Machine Shop')}]
+            columns += [{'string': _('Winding')}]
+            columns += [{'string': _('Assembly')}]
+            columns += [{'string': _('Field Services')}]
+            columns += [{'string': _('New Product Sales')}]
+            columns += [{'string': _('Total')}]
+
+            return {'columns': columns, 'x_offset': 9, 'merge': 4}
+
     def _get_columns_name(self, options):
-        return [{'name': _('Internal Ref')},
-                {'name': _('Customer')},
-                {'name': _('Customer Cat')},
-                {'name': _('Project Manager')},
-                {'name': _('Account Manager')},
-                {'name': _('Job')},
-                {'name': _('Revenue'), 'class': 'number'},
-                {'name': _('COGS'), 'class': 'number'},
-                {'name': _('GM $$'), 'class': 'number'},
-                {'name': _('GM %'), 'class': 'number'}]
+        if options.get('custom') != 'jeanne':
+            return [{'name': _('Internal Ref')},
+                    {'name': _('Customer')},
+                    {'name': _('Customer Cat')},
+                    {'name': _('Project Manager')},
+                    {'name': _('Account Manager')},
+                    {'name': _('Job')},
+                    {'name': _('Revenue'), 'class': 'number'},
+                    {'name': _('COGS'), 'class': 'number'},
+                    {'name': _('GM $$'), 'class': 'number'},
+                    {'name': _('GM %'), 'class': 'number'}]
+        else:
+            return [{'name': _('Internal Ref')},
+                    {'name': _('Customer')},
+                    {'name': _('Customer Cat')},
+                    {'name': _('Project Manager')},
+                    {'name': _('Account Manager')},
+                    {'name': _('Job #')},
+                    {'name': _('Sales Order #')},
+                    {'name': _('Invoice #')},
+                    {'name': _('Invoice Date')},
+                    {'name': _('Revenue'), 'class': 'number'},
+                    {'name': _('COGS'), 'class': 'number'},
+                    {'name': _('GM $$'), 'class': 'number'},
+                    {'name': _('GM %'), 'class': 'number'},
+                    {'name': _('Revenue'), 'class': 'number'},
+                    {'name': _('COGS'), 'class': 'number'},
+                    {'name': _('GM $$'), 'class': 'number'},
+                    {'name': _('GM %'), 'class': 'number'},
+                    {'name': _('Revenue'), 'class': 'number'},
+                    {'name': _('COGS'), 'class': 'number'},
+                    {'name': _('GM $$'), 'class': 'number'},
+                    {'name': _('GM %'), 'class': 'number'},
+                    {'name': _('Revenue'), 'class': 'number'},
+                    {'name': _('COGS'), 'class': 'number'},
+                    {'name': _('GM $$'), 'class': 'number'},
+                    {'name': _('GM %'), 'class': 'number'},
+                    {'name': _('Revenue'), 'class': 'number'},
+                    {'name': _('COGS'), 'class': 'number'},
+                    {'name': _('GM $$'), 'class': 'number'},
+                    {'name': _('GM %'), 'class': 'number'},
+                    {'name': _('Revenue'), 'class': 'number'},
+                    {'name': _('COGS'), 'class': 'number'},
+                    {'name': _('GM $$'), 'class': 'number'},
+                    {'name': _('GM %'), 'class': 'number'},
+                    {'name': _('Revenue'), 'class': 'number'},
+                    {'name': _('COGS'), 'class': 'number'},
+                    {'name': _('GM $$'), 'class': 'number'},
+                    {'name': _('GM %'), 'class': 'number'}]
+
+    @api.model
+    def _get_lines(self, options, line_id=None):
+        if options.get('custom') != 'jeanne':
+            self._get_lines_regular(options, line_id)
+        else:
+            self._get_lines_custom(options, line_id)
 
     @api.model
     def _get_lines(self, options, line_id=None):
@@ -132,6 +191,9 @@ class ReportGrossMargin(models.AbstractModel):
             total += line.get('balance')
             ++count
 #             raise UserError(_(line))
+            margin = 0
+            if line.get('credit') != 0:
+                margin = line.get('balance')/line.get('credit') * 100
             lines.append({
                     'id': line.get('aa_id'),
                     'name': line.get('ref'),
@@ -146,13 +208,16 @@ class ReportGrossMargin(models.AbstractModel):
                                 {'name': self.format_value(line.get('credit'))},
                                 {'name': self.format_value(line.get('debit'))},
                                 {'name': self.format_value(line.get('balance'))},
-                                {'name': '{0:.2f}'.format(line.get('balance')/line.get('credit') * 100) }],
+                                {'name': '{0:.2f}'.format(margin) }],
                 })
         # Adding profit center lines
         if line_id:
             self.env.cr.execute(unfold_query, params)
             results = self.env.cr.dictfetchall()
             for child_line in results:
+                margin = 0
+                if child_line.get('credit') != 0:
+                    margin = child_line.get('balance')/child_line.get('credit') * 100
                 lines.append({
                         'id': '%s_%s' % (child_line.get('id'), child_line.get('name')),
                         'name': child_line.get('profit_center'),
@@ -168,7 +233,7 @@ class ReportGrossMargin(models.AbstractModel):
                             self.format_value(child_line.get('credit')), 
                             self.format_value(child_line.get('debit')), 
                             self.format_value(child_line.get('balance')),
-                            '{0:.2f}'.format(child_line.get('balance')/child_line.get('credit') * 100)
+                            '{0:.2f}'.format(margin)
                         ]],
                     })
             # Sum of all the partner lines
@@ -222,3 +287,20 @@ class ReportGrossMargin(models.AbstractModel):
         ]
         action = clean_action(action)
         return action
+
+    def export_xlsx(self, options):
+        options['custom'] ='jeanne'
+        return {
+                'type': 'ir_actions_account_report_download',
+                'data': {'model': self.env.context.get('model'),
+                         'options': json.dumps(options),
+                         'output_format': 'xlsx',
+                         'financial_id': self.env.context.get('id'),
+                         }
+        }
+    
+    def _get_reports_buttons(self):
+        return [{'name': _('Print Preview'), 'action': 'print_pdf'}, 
+                {'name': _('Export (XLSX)'), 'action': 'print_xlsx'}, 
+                {'name': _('Jeanne\'s Export'), 'action': 'export_xlsx'}]
+

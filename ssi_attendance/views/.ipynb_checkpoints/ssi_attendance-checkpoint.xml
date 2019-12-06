@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <data>
+        <record id="ssi_attendance_line_form" model="ir.ui.view">
+        <field name="name">ssi.attendance_line_form</field>
+			<field name="model">hr.attendance</field>
+        <field name="inherit_id" ref="hr_attendance.hr_attendance_view_form"/>
+        <field name="type">form</field>
+            <field name="arch" type="xml">
+			<xpath expr="//field[@name='check_out']" position="after">
+				<field name="attendance_lines"> 
+				  <tree string="lines" create="true" edit="true">
+					<field name="check_in"/>
+					<field name="check_out"/>
+					<field name="job_id"/>
+					<field name="workorder_id"/>
+					<field name="worked_hours"/>
+					<field name="status"/>
+				  </tree>
+				</field>
+			</xpath>
+            </field>
+        </record>
+
+        <record id="ssi_attendance_search_inherit" model="ir.ui.view">
+            <field name="name">ssi.attendance_search_inherit</field>
+            <field name="model">hr.attendance</field>
+            <field name="inherit_id" ref="hr_attendance.hr_attendance_view_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='myattendances']" position="after">
+                    <separator/>
+                    <filter string="My Approvals" name="ssi_approvals" domain="[['manager_id.user_id.id', '=', uid]]"/>
+                </xpath>
+              <xpath expr="//filter[@name='employee']" position="after">
+                <filter context="{'group_by': 'manager_id'}" name="group_by_manager" string="Manager"/>
+                <filter context="{'group_by': 'department_id'}" name="group_by_dept" string="Department"/>
+              </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

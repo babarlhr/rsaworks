@@ -286,7 +286,7 @@ class Jobs(models.Model):
     def write(self, vals):
         # stage change: update date_last_stage_update
         if 'stage_id' in vals: 
-            if vals['stage_id'] == 7:
+            if vals['stage_id'] >= 7:
                 vals['completed_on'] = fields.Datetime.now()
             elif vals['stage_id'] < 7: 
                 vals['completed_on'] = False

@@ -30,7 +30,7 @@ class SaleNonstockProduct(models.TransientModel):
             'sale_ok':self.product_template_id.sale_ok,
             'purchase_ok':self.product_template_id.purchase_ok,
             'type':self.product_template_id.type,
-            'taxes_id':self.product_template_id.taxes_id,
+            'taxes_id':[(6, 0, self.product_template_id.taxes_id.ids)],
             'invoice_policy':self.product_template_id.invoice_policy,
             'list_price':self.price,
             'default_code':ns_name,
@@ -74,6 +74,7 @@ class SaleNonstockProduct(models.TransientModel):
             'product_uom_qty':1,
             'product_uom':new_prod_id.uom_id.id,
             'price_unit':self.price,
+            'purchase_price':self.cost,
             'name':new_prod_id.name,
             'order_id':self.order_id.id,
         }
