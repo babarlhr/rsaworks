@@ -29,6 +29,78 @@
           </field>
       </record>
 
+      <record model="ir.ui.view" id="ssi_product_form">
+          <field name="name">ssi_product_pricelist_form</field>
+          <field name="model">product.pricelist</field>
+          <field name="inherit_id" ref="product.product_pricelist_view"/>
+          <field name="type">form</field>
+          <field name="arch" type="xml">
+              <xpath expr="//field[@name='price']" position="after">
+                <field name="rebate_amount"/>
+              </xpath>
+              <xpath expr="//form[1]/sheet[1]/div[not(@name)][2]/field[@name='item_ids']/tree[1]" position="after">
+                <form string="Pricelist Items">
+                  <h1>
+                    <field name="name"/>
+                  </h1>
+                  <group name="studio_group_44487b">
+                    <group name="studio_group_074544">
+                      <field name="applied_on" widget="radio"/>
+                      <field name="categ_id" attrs="{'invisible':[('applied_on', '!=', '2_product_category')], 'required':[('applied_on', '=', '2_product_category')]}"/>
+                      <field name="product_tmpl_id" attrs="{'invisible':[('applied_on', '!=', '1_product')],'required':[('applied_on', '=', '1_product')]}" string="Product"/>
+                      <field name="product_id" attrs="{'invisible':[('applied_on', '!=', '0_product_variant')],'required':[('applied_on', '=', '0_product_variant')]}" string="Product Variant"/>
+                    </group>
+                    <group name="studio_group_53a427">
+                      <field name="min_quantity"/>
+                      <field name="date_start"/>
+                      <field name="date_end"/>
+                      <field name="rebate_amount"/>
+                    </group>
+                  </group>
+                  <separator string="Price Computation"/>
+                  <group name="studio_group_b87ad6">
+                    <group name="studio_group_cb1df7">
+                      <label for="compute_price" string="Compute Price"/>
+                      <div name="studio_div_400a0d">
+                        <field name="compute_price" widget="radio"/>
+                        <field name="currency_id" invisible="1"/>
+                        <div attrs="{'invisible':[('compute_price', '!=', 'fixed')]}" name="studio_div_0b1e5f">
+                          <field name="fixed_price" nolabel="1" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </div>
+                        <div attrs="{'invisible':[('compute_price', '!=', 'percentage')]}" name="studio_div_c26bce">
+                          <field name="percent_price" nolabel="1" class="oe_inline"/>%
+                                            </div>
+                      </div>
+                    </group>
+                  </group>
+                  <div class="oe_grey" groups="uom.group_uom" name="studio_div_31f429">
+                    <p>The computed price is expressed in the default Unit of Measure of the product.</p>
+                  </div>
+                  <group col="6" attrs="{'invisible':[('compute_price', '!=', 'formula')]}" name="studio_group_d4099d">
+                    <field name="base" colspan="6"/>
+                    <label for="" string="New Price ="/>
+                    <div name="studio_div_9cb2bb">
+                      <span attrs="{'invisible':[('base', '!=', 'list_price')]}">Public Price  -  </span>
+                      <span attrs="{'invisible':[('base', '!=', 'standard_price')]}">Cost  -  </span>
+                      <span attrs="{'invisible':[('base', '!=', 'pricelist')]}">Other Pricelist  -  </span>
+                    </div>
+                    <label for="price_discount"/>
+                    <div class="o_row" name="studio_div_7b59f2">
+                      <field name="price_discount"/>
+                      <span>%</span>
+                    </div>
+                    <label string=" + " for="price_surcharge"/>
+                    <field name="price_surcharge" nolabel="1"/>
+                    <field name="price_round" string="Rounding Method"/>
+                    <field name="price_min_margin" string="Min. Margin"/>
+                    <field name="price_max_margin" string="Max. Margin"/>
+                    <field name="base_pricelist_id" attrs="{'invisible':[('base', '!=', 'pricelist')],'required': [('base','=', 'pricelist')], 'readonly': [('base','!=', 'pricelist')]}"/>
+                  </group>
+                </form>
+              </xpath>
+          </field>
+              </record>
+
     </data>
 </odoo>
 

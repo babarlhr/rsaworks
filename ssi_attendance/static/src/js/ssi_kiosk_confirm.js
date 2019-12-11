@@ -160,6 +160,7 @@ var KioskConfirm = AbstractAction.extend({
                         this.next_action,
                         job,
                         wo,
+                        close,
                         end_job
                     ],
                 })

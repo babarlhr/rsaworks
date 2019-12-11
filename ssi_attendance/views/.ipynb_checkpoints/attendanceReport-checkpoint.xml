@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+  <!-- <record id="attendance_reports_table_fields" model="ir.ui.view">
+      <field name="name">attendance_reports_table_fields</field>
+      <field name="model">hr.attendance.reports</field>
+      <field name="inherit_id" ref="ssi_attendance.hr_attendance_reports_view"/>
+  </record>		
+ -->
+
+
+  <!-- <record model="ir.ui.view" id="attendance_reports_tree_view">
+      <field name="name">attendance_reports.tree</field>
+      <field name="model">hr.attendance.reports</field>
+      <field name="arch" type="xml">
+        <tree string="Employee attendances">
+            <field name="employee_id"/>
+            <field name="begin_date"/>
+            <field name="end_date"/>
+            <field name="hours"/>
+        </tree>
+      </field>
+  </record> -->
+
+<!-- 
+  <record 
+    model="ir.actions.act_window" 
+    id="hr_attendance_reports_view">
+      <field name="name">Attendance Reports</field>
+      <field name="res_model">hr.attendance.reports</field>
+      <field name="view_mode">tree,form</field>
+
+  </record> -->
+
+
+  <!-- <menuitem 
+    id="menu_hr_attendance_reports_view"
+    parent="hr_attendance.menu_hr_attendance_report" 
+    name="Attendance Reports" 
+    sequence="10" 
+    action="hr_attendance_reports_view"/> -->
+
+
+</odoo>

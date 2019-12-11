@@ -1,12 +1,21 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models, tools, _
+from odoo.exceptions import UserError
+from odoo.addons import decimal_precision as dp
 
 
 class AccountInvoice(models.Model):
     _inherit = 'account.invoice'
 
-    project_manager = fields.Many2one('res.users', related='partner_id.project_manager_id', string='Project Manager')
+    project_manager = fields.Many2one('res.users', string='Project Manager')
+
+    @api.multi
+    def create(self, vals):
+        pm_id = self.env['sale.order'].search([('name', '=', vals.get('origin'))]).project_manager.id
+        vals['project_manager'] = pm_id
+        res = super(AccountInvoice, self).create(vals)
+        return res
 
     @api.multi
     def action_move_create(self):
@@ -111,3 +120,18 @@ class AI(models.Model):
     _inherit = 'account.invoice.line'
 
     ssi_job_id = fields.Many2one('ssi_jobs', related='account_analytic_id.ssi_job_id', string='Job', store=True)
+    rebate_total = fields.Float(compute='_get_rebate_total', string='Rebate Total', digits=dp.get_precision('Product Price'), store=True)
+
+    @api.depends('sale_line_ids')
+    def _get_rebate_total(self):
+        for line in self:
+            amount = 0
+            for sl in line.sale_line_ids:
+                amount = sl.rebate_amount * sl.product_uom_qty
+            line.rebate_total = amount
+#                 raise UserError(_(sl.rebate_amount))
+#             amount = self.env['product.pricelist.item'].search([('product_id', '=', line.product_id.id), ('pricelist_id', '=', line.order_id.pricelist_id.id)], limit=1).rebate_amount
+#             if not amount:
+#                 prod_tmpl_id = self.env['product.product'].search([('id', '=', line.product_id.id)]).product_tmpl_id.id
+#                 amount = self.env['product.pricelist.item'].search([('product_tmpl_id', '=', prod_tmpl_id), ('pricelist_id', '=', line.order_id.pricelist_id.id)], limit=1).rebate_amount
+

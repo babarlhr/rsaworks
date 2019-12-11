@@ -22,6 +22,7 @@
         'product',
         'purchase',
         'sale',
+        'sale_margin',
         'stock',
         'mail',
     ],

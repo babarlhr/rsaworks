@@ -11,6 +11,9 @@
               <xpath expr="//form[1]/sheet[1]/notebook[1]/page[1]/field[@name='invoice_line_ids']/tree[1]/field[@name='account_analytic_id']" position="after">
                 <field name="ssi_job_id"/>
               </xpath>
+              <xpath expr="//form[1]/sheet[1]/notebook[1]/page[1]/field[@name='invoice_line_ids']/tree[1]/field[@name='price_subtotal']" position="before">
+                <field name="rebate_total"/>
+              </xpath>
           </field>
       </record>
 

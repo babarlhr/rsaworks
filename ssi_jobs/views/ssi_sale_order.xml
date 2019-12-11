@@ -12,8 +12,14 @@
               <xpath expr="//form[1]/sheet[1]/notebook[1]/page[@name='order_lines']/field[@name='order_line']/tree[1]/field[@name='product_id']" position="attributes">
                 <attribute name="options">{'no_create': True, 'no_create_edit': True}</attribute>
               </xpath>
+              <xpath expr="//form[1]/sheet[1]/notebook[1]/page[@name='order_lines']/field[@name='order_line']/tree[1]/field[@name='purchase_price']" position="after">
+                <field name="rebate_amount" string="Unit Rebate"/>
+              </xpath>
               <xpath expr="//field[@name='payment_mode_id']" position="after">
                 <field name="ssi_job_id"/>
+              </xpath>
+              <xpath expr="//field[@name='user_id']" position="after">
+                <field name="project_manager"/>
               </xpath>
           </field>
       </record>

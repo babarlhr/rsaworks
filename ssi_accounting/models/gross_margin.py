@@ -25,6 +25,8 @@ class ReportGrossMargin(models.AbstractModel):
             columns += [{'string': _('Assembly')}]
             columns += [{'string': _('Field Services')}]
             columns += [{'string': _('New Product Sales')}]
+            columns += [{'string': _('Training')}]
+            columns += [{'string': _('Storage')}]
             columns += [{'string': _('Total')}]
 
             return {'columns': columns, 'x_offset': 9, 'merge': 4}
@@ -78,17 +80,25 @@ class ReportGrossMargin(models.AbstractModel):
                     {'name': _('Revenue'), 'class': 'number'},
                     {'name': _('COGS'), 'class': 'number'},
                     {'name': _('GM $$'), 'class': 'number'},
+                    {'name': _('GM %'), 'class': 'number'},
+                    {'name': _('Revenue'), 'class': 'number'},
+                    {'name': _('COGS'), 'class': 'number'},
+                    {'name': _('GM $$'), 'class': 'number'},
+                    {'name': _('GM %'), 'class': 'number'},
+                    {'name': _('Revenue'), 'class': 'number'},
+                    {'name': _('COGS'), 'class': 'number'},
+                    {'name': _('GM $$'), 'class': 'number'},
                     {'name': _('GM %'), 'class': 'number'}]
 
     @api.model
     def _get_lines(self, options, line_id=None):
         if options.get('custom') != 'jeanne':
-            self._get_lines_regular(options, line_id)
+            return self._get_lines_regular(options, line_id)
         else:
-            self._get_lines_custom(options, line_id)
+            return self._get_lines_custom(options, line_id)
 
     @api.model
-    def _get_lines(self, options, line_id=None):
+    def _get_lines_regular(self, options, line_id=None):
         lines = []
         tables, where_clause, where_params = self.env['account.move.line'].with_context(strict_range=True)._query_get()
 #         user_type_id = self.env['account.account.type'].search([('type', '=', 'receivable')])
@@ -99,84 +109,34 @@ class ReportGrossMargin(models.AbstractModel):
         if line_id != None:
             where_clause = 'AND \"account_move_line\".analytic_account_id = %s ' + where_clause
             where_params = [line_id] + where_params
-#             unfold_query = """
-#                 SELECT sum(\"account_move_line\".balance) AS balance, p.name, p.id, c.id AS country_id FROM """+tables+"""
-#                     LEFT JOIN res_partner p ON \"account_move_line\".partner_id = p.id
-#                     LEFT JOIN res_country c on p.country_id = c.id
-#                     WHERE \"account_move_line\".invoice_id IS NOT NULL AND \"account_move_line\".user_type_id = %s """+where_clause+"""
-#                     GROUP BY p.name, p.id, c.id ORDER BY p.name
-#             """
+
             unfold_query = """
                 SELECT sum(\"account_move_line\".balance)*-1 AS balance, sum(\"account_move_line\".debit) AS debit, sum(\"account_move_line\".credit) AS credit,
                     \"account_move_line\".analytic_account_id AS aa_id, pc.profit_center
                     FROM """+tables+"""
+                    LEFT JOIN account_account ac on \"account_move_line\".account_id = ac.id
                     LEFT JOIN account_analytic_account aa on \"account_move_line\".analytic_account_id = aa.id
                     LEFT JOIN product_product pp on \"account_move_line\".product_id = pp.id
                     LEFT JOIN product_template pt on pp.product_tmpl_id = pt.id
                     LEFT JOIN product_category pc on pt.categ_id = pc.id
-                    WHERE \"account_move_line\".analytic_account_id IS NOT NULL AND \"account_move_line\".user_type_id IN (14, 16) """+where_clause+"""
+                    WHERE \"account_move_line\".analytic_account_id IS NOT NULL 
+                    AND ac.group_id IN (2, 3) """+where_clause+"""
                     GROUP BY aa_id, pc.profit_center ORDER BY pc.profit_center
             """
 
 
-#     def _select(self):
-#         select_str = """
-# 				SELECT DISTINCT aml.id AS id, aml.name AS name, aml.quantity as quantity, aml.product_uom_id as product_uom_id, aml.product_id AS product_id, 
-#                     aml.debit AS debit, aml.credit AS credit, aml.balance AS balance, aml.amount_currency AS amount_currency,
-#                     aml.debit_cash_basis AS debit_cash_basis, aml.credit_cash_basis AS credit_cash_basis, aml.balance_cash_basis AS balance_cash_basis,
-#                     aml.company_currency_id AS company_currency_id, aml.currency_id AS currency_id, aml.amount_residual AS amount_residual,
-#                     aml.amount_residual_currency AS amount_residual_currency, aml.tax_base_amount AS tax_base_amount, aml.account_id AS account_id,
-#                     aml.move_id AS move_id, aml.ref as ref, aml.payment_id AS payment_id, aml.reconciled AS reconciled, aml.full_reconcile_id AS full_reconcile_id, 
-#                     aml.journal_id AS journal_id, aml.blocked AS blocked, aml.date_maturity AS date_maturity, aml.date AS date, 
-#                     aml.tax_line_id AS tax_line_id, aml.analytic_account_id AS analytic_account_id, aml.company_id AS company_id, 
-#                     aml.partner_id AS partner_id, aml.user_type_id AS user_type_id, aml.tax_exigible AS tax_exigible, 
-#                     pt.categ_id AS categ_id, rp.user_id AS user_id, rp.project_manager_id AS project_manager, aaa.group_id AS aa_group_id
-#         """
-#         return select_str
-
-#     def _from(self):
-#         from_str = """
-#                 FROM account_move_line aml
-#                 JOIN account_move am on aml.move_id = am.id
-#                 LEFT JOIN account_analytic_account aaa on aml.analytic_account_id = aaa.id
-#                 LEFT JOIN product_product pp on aml.product_id = pp.id
-#                 LEFT JOIN product_template pt on pp.product_tmpl_id = pt.id
-#                 LEFT JOIN res_partner rp on aml.partner_id = rp.id
-#         """
-#         return from_str
-
-#     def _group_by(self):
-#         group_by_str = """
-#                 GROUP BY aml.id, aml.product_id, aml.account_analytic_id, aml.date
-#         """
-#         return group_by_str
-
         sql_query = """
             SELECT sum(\"account_move_line\".balance)*-1 AS balance, sum(\"account_move_line\".debit) AS debit, sum(\"account_move_line\".credit) AS credit,
                 \"account_move_line\".analytic_account_id AS aa_id, 
-                p.customer_category, aa.name as job_name,
-                pm.name AS project_manager, am.name AS account_manager FROM """+tables+"""
+                p.customer_category, p.name as partner, aa.name as job_name, p.ref
+                FROM """+tables+"""
                 LEFT JOIN res_partner p ON \"account_move_line\".partner_id = p.id
-                LEFT JOIN res_users pu on p.project_manager_id = pu.id
-                LEFT JOIN res_partner pm on pu.partner_id = pm.id
-                LEFT JOIN res_users au on p.user_id = au.id
-                LEFT JOIN res_partner am on au.partner_id = am.id
+                LEFT JOIN account_account ac on \"account_move_line\".account_id = ac.id
                 LEFT JOIN account_analytic_account aa on \"account_move_line\".analytic_account_id = aa.id
-                WHERE \"account_move_line\".analytic_account_id IS NOT NULL AND \"account_move_line\".user_type_id IN (14, 16) """+where_clause+"""
-                GROUP BY aa_id, pm.name, am.name, p.customer_category, job_name ORDER BY job_name
+                WHERE \"account_move_line\".analytic_account_id IS NOT NULL AND ac.group_id IN (2, 3) """+where_clause+"""
+                GROUP BY aa_id, p.ref, p.name, p.customer_category, job_name ORDER BY job_name
         """
-#         sql_query = """
-#             SELECT sum(\"account_move_line\".balance) AS balance, sum(\"account_move_line\".debit) AS debit, sum(\"account_move_line\".credit) AS credit,
-#                 \"account_move_line\".analytic_account_id AS aa_id, 
-#                 p.name, p.ref, p.customer_category, aa.name as job_name,
-#                 pm.name AS project_manager, am.name AS account_manager FROM """+tables+"""
-#                 LEFT JOIN res_partner p ON \"account_move_line\".partner_id = p.id
-#                 LEFT JOIN res_partner pm on p.project_manager_id = pm.id
-#                 LEFT JOIN res_partner am on p.user_id = am.id
-#                 LEFT JOIN account_analytic_account aa on \"account_move_line\".analytic_account_id = aa.id
-#                 WHERE \"account_move_line\".analytic_account_id IS NOT NULL AND \"account_move_line\".user_type_id IN (14, 16) """+where_clause+"""
-#                 GROUP BY aa_id, p.name, p.ref, pm.name, am.name, p.customer_category, job_name ORDER BY job_name
-#         """
+
         params = where_params
         self.env.cr.execute(sql_query, params)
         results = self.env.cr.dictfetchall()
@@ -194,16 +154,17 @@ class ReportGrossMargin(models.AbstractModel):
             margin = 0
             if line.get('credit') != 0:
                 margin = line.get('balance')/line.get('credit') * 100
+            invoice = self.env['account.invoice.line'].search([('account_analytic_id', '=', line.get('aa_id'))], limit=1).invoice_id
             lines.append({
                     'id': line.get('aa_id'),
                     'name': line.get('ref'),
                     'level': 2,
                     'unfoldable': True,
                     'unfolded': line_id == line.get('aa_id') and True or False,
-                    'columns': [{'name': line.get('job_name')}, 
+                    'columns': [{'name': line.get('partner')}, 
                                 {'name': line.get('customer_category')}, 
-                                {'name': line.get('project_manager')}, 
-                                {'name': line.get('account_manager')},
+                                {'name': invoice.project_manager.name}, 
+                                {'name': invoice.user_id.name},
                                 {'name': line.get('job_name')},
                                 {'name': self.format_value(line.get('credit'))},
                                 {'name': self.format_value(line.get('debit'))},
@@ -245,6 +206,144 @@ class ReportGrossMargin(models.AbstractModel):
                     'columns': [{'name': v} for v in ['', '', '', '', '', '', '', child_line.get('total')]],
                 })
 
+        # Don't display level 0 total line in case we are unfolding
+        if total and not line_id:
+            lines.append({
+                'id': 'total',
+                'name': _('Total'),
+                'level': 0,
+                'class': 'total',
+                'columns': [{'name': v} for v in [
+                        '', 
+                        '',
+                        '', 
+                        '', 
+                        '', 
+                        self.format_value(total_c), 
+                        self.format_value(total_d), 
+                        self.format_value(total),
+                        '{0:.2f}'.format(total/total_c * 100),
+                    ]],
+                })
+#             raise UserError(_(lines))
+        return lines
+
+    @api.model
+    def _get_lines_custom(self, options, line_id=None):
+        lines = []
+        tables, where_clause, where_params = self.env['account.move.line'].with_context(strict_range=True)._query_get()
+        if where_clause:
+            where_clause = 'AND ' + where_clause
+
+        sql_query = """
+            SELECT sum(\"account_move_line\".balance)*-1 AS balance, 
+                sum(\"account_move_line\".debit) AS debit, 
+                sum(\"account_move_line\".credit) AS credit,
+                sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'Disassembly') as d_bal,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Disassembly') as d_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Disassembly') as d_credit,
+                sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'Machine Shop') as m_bal,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Machine Shop') as m_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Machine Shop') as m_credit,
+                sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'Winding') as w_bal,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Winding') as w_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Winding') as w_credit,
+                sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'Assembly') as a_bal,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Assembly') as a_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Assembly') as a_credit,
+                sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'Field Services') as f_bal,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Field Services') as f_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Field Services') as f_credit,
+                sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'New Product Sales') as n_bal,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'New Product Sales') as n_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'New Product Sales') as n_credit,
+                sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'Storage') as s_bal,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Storage') as s_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Storage') as s_credit,
+                sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'Training') as t_bal,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Training') as t_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Training') as t_credit,
+                \"account_move_line\".analytic_account_id AS aa_id, 
+                p.customer_category, p.name as partner, p.ref, aa.name as job_name
+                FROM """+tables+"""
+                LEFT JOIN res_partner p ON \"account_move_line\".partner_id = p.id
+                LEFT JOIN account_account ac on \"account_move_line\".account_id = ac.id
+                LEFT JOIN account_analytic_account aa on \"account_move_line\".analytic_account_id = aa.id
+                LEFT JOIN product_product pp on \"account_move_line\".product_id = pp.id
+                LEFT JOIN product_template pt on pp.product_tmpl_id = pt.id
+                LEFT JOIN product_category pc on pt.categ_id = pc.id
+                WHERE \"account_move_line\".analytic_account_id IS NOT NULL AND ac.group_id IN (2, 3) """+where_clause+"""
+                GROUP BY aa_id, p.name, p.customer_category, p.ref, job_name ORDER BY job_name
+        """
+        params = where_params
+        self.env.cr.execute(sql_query, params)
+        results = self.env.cr.dictfetchall()
+
+        total_c = 0
+        total_d = 0
+        total = 0
+        count = 0
+        for line in results:
+            total_c += line.get('credit')
+            total_d += line.get('debit')
+            total += line.get('balance')
+            ++count
+            margin = 0
+            if line.get('credit') != 0:
+                margin = line.get('balance')/line.get('credit') * 100
+            invoice = self.env['account.invoice.line'].search([('account_analytic_id', '=', line.get('aa_id'))], limit=1).invoice_id
+#             raise UserError(_(invoice.date_invoice))
+            lines.append({
+                    'id': line.get('aa_id'),
+                    'name': line.get('ref'),
+                    'level': 2,
+                    'unfoldable': True,
+                    'unfolded': line_id == line.get('aa_id') and True or False,
+                    'columns': [{'name': line.get('partner')}, 
+                                {'name': line.get('customer_category')}, 
+                                {'name': invoice.project_manager.name}, 
+                                {'name': invoice.user_id.name},
+                                {'name': line.get('job_name')},
+                                {'name': invoice.origin},
+                                {'name': invoice.move_id.name},
+                                {'name': invoice.date_invoice},
+                                {'name': (line.get('d_credit')*-1)},
+                                {'name': line.get('d_debit')},
+                                {'name': line.get('d_bal')},
+                                {'name': ''},
+                                {'name': line.get('m_credit')},
+                                {'name': line.get('m_debit')},
+                                {'name': line.get('m_bal')},
+                                {'name': ''},
+                                {'name': line.get('w_credit')},
+                                {'name': line.get('w_debit')},
+                                {'name': line.get('w_bal')},
+                                {'name': ''},
+                                {'name': line.get('a_credit')},
+                                {'name': line.get('a_debit')},
+                                {'name': line.get('a_bal')},
+                                {'name': ''},
+                                {'name': line.get('f_credit')},
+                                {'name': line.get('f_debit')},
+                                {'name': line.get('f_bal')},
+                                {'name': ''},
+                                {'name': line.get('n_credit')},
+                                {'name': line.get('n_debit')},
+                                {'name': line.get('n_bal')},
+                                {'name': ''},
+                                {'name': line.get('s_credit')},
+                                {'name': line.get('s_debit')},
+                                {'name': line.get('s_bal')},
+                                {'name': ''},
+                                {'name': line.get('t_credit')},
+                                {'name': line.get('t_debit')},
+                                {'name': line.get('t_bal')},
+                                {'name': ''},
+                                {'name': line.get('credit')},
+                                {'name': line.get('debit')},
+                                {'name': line.get('balance')},
+                                {'name': '{0:.2f}'.format(margin) }],
+                })
         # Don't display level 0 total line in case we are unfolding
         if total and not line_id:
             lines.append({
