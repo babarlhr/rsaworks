@@ -15,7 +15,9 @@ class ReportGrossMargin(models.AbstractModel):
     _inherit = 'account.report'
 
     filter_date = {'date_from': '', 'date_to': '', 'filter': 'this_month'}
-    filter_all_entries = False
+    filter_unfold_all = True
+    filter_partner = True
+    filter_analytic = True
 
     def _get_super_columns(self, options):
         if options.get('custom') == 'jeanne':
@@ -38,6 +40,7 @@ class ReportGrossMargin(models.AbstractModel):
                     {'name': _('Customer Cat')},
                     {'name': _('Project Manager')},
                     {'name': _('Account Manager')},
+                    {'name': _('Invoice')},
                     {'name': _('Job')},
                     {'name': _('Revenue'), 'class': 'number'},
                     {'name': _('COGS'), 'class': 'number'},
@@ -107,20 +110,24 @@ class ReportGrossMargin(models.AbstractModel):
         # When unfolding, only fetch sum for the job we are unfolding and
         # fetch all partners for that country
         if line_id != None:
-            where_clause = 'AND \"account_move_line\".analytic_account_id = %s ' + where_clause
-            where_params = [line_id] + where_params
+            if isinstance(line_id, int):
+                where_clause = 'AND \"account_move_line\".analytic_account_id = %s ' + where_clause
+                where_params = [line_id] + where_params
+            else:
+                where_clause = 'AND am.ref = %s ' + where_clause
+                where_params = [line_id] + where_params
 
             unfold_query = """
                 SELECT sum(\"account_move_line\".balance)*-1 AS balance, sum(\"account_move_line\".debit) AS debit, sum(\"account_move_line\".credit) AS credit,
-                    \"account_move_line\".analytic_account_id AS aa_id, pc.profit_center
+                    \"account_move_line\".analytic_account_id AS aa_id, MIN(\"account_move_line\".id) AS aml_id, pc.profit_center
                     FROM """+tables+"""
                     LEFT JOIN account_account ac on \"account_move_line\".account_id = ac.id
                     LEFT JOIN account_analytic_account aa on \"account_move_line\".analytic_account_id = aa.id
+                    LEFT JOIN account_move am on \"account_move_line\".move_id = am.id
                     LEFT JOIN product_product pp on \"account_move_line\".product_id = pp.id
                     LEFT JOIN product_template pt on pp.product_tmpl_id = pt.id
                     LEFT JOIN product_category pc on pt.categ_id = pc.id
-                    WHERE \"account_move_line\".analytic_account_id IS NOT NULL 
-                    AND ac.group_id IN (2, 3) """+where_clause+"""
+                    WHERE ac.group_id IN (2, 3) """+where_clause+"""
                     GROUP BY aa_id, pc.profit_center ORDER BY pc.profit_center
             """
 
@@ -128,13 +135,14 @@ class ReportGrossMargin(models.AbstractModel):
         sql_query = """
             SELECT sum(\"account_move_line\".balance)*-1 AS balance, sum(\"account_move_line\".debit) AS debit, sum(\"account_move_line\".credit) AS credit,
                 \"account_move_line\".analytic_account_id AS aa_id, 
-                p.customer_category, p.name as partner, aa.name as job_name, p.ref
-                FROM """+tables+"""
+                p.customer_category, p.name as partner, aa.name as job_name, 
+                p.ref, am.ref as am_ref FROM """+tables+"""
                 LEFT JOIN res_partner p ON \"account_move_line\".partner_id = p.id
                 LEFT JOIN account_account ac on \"account_move_line\".account_id = ac.id
+                LEFT JOIN account_move am on \"account_move_line\".move_id = am.id
                 LEFT JOIN account_analytic_account aa on \"account_move_line\".analytic_account_id = aa.id
-                WHERE \"account_move_line\".analytic_account_id IS NOT NULL AND ac.group_id IN (2, 3) """+where_clause+"""
-                GROUP BY aa_id, p.ref, p.name, p.customer_category, job_name ORDER BY job_name
+                WHERE am.ref IS NOT NULL AND ac.group_id IN (2, 3) """+where_clause+"""
+                GROUP BY aa_id, p.ref, p.name, p.customer_category, job_name, am_ref ORDER BY job_name
         """
 
         params = where_params
@@ -144,33 +152,54 @@ class ReportGrossMargin(models.AbstractModel):
         total_c = 0
         total_d = 0
         total = 0
+        line_c = 0
+        line_d = 0
+        line_b = 0
         count = 0
-        for line in results:
+        for k, line in enumerate(results):
             total_c += line.get('credit')
             total_d += line.get('debit')
             total += line.get('balance')
-            ++count
-#             raise UserError(_(line))
-            margin = 0
-            if line.get('credit') != 0:
-                margin = line.get('balance')/line.get('credit') * 100
-            invoice = self.env['account.invoice.line'].search([('account_analytic_id', '=', line.get('aa_id'))], limit=1).invoice_id
-            lines.append({
-                    'id': line.get('aa_id'),
-                    'name': line.get('ref'),
-                    'level': 2,
-                    'unfoldable': True,
-                    'unfolded': line_id == line.get('aa_id') and True or False,
-                    'columns': [{'name': line.get('partner')}, 
-                                {'name': invoice.customer_category}, 
-                                {'name': invoice.project_manager.name}, 
-                                {'name': invoice.user_id.name},
-                                {'name': line.get('job_name')},
-                                {'name': self.format_value(line.get('credit'))},
-                                {'name': self.format_value(line.get('debit'))},
-                                {'name': self.format_value(line.get('balance'))},
-                                {'name': '{0:.2f}'.format(margin) }],
+            line_c += line.get('credit')
+            line_d += line.get('debit')
+            line_b += line.get('balance')
+            if k+1 < len(results):
+                next_job = results[k+1].get('job_name')
+            else:
+                next_job = ''
+            if line.get('job_name') != next_job or not line.get('job_name'):
+#             if True:
+                ++count
+                margin = 0
+                if line_c != 0:
+                    margin = (line_b/line_c) * 100
+                invoice = self.env['account.invoice.line'].search([('account_analytic_id', '=', line.get('aa_id'))], limit=1).invoice_id
+                if line.get('job_name'):
+                    id = line.get('aa_id')
+                    amref = invoice.move_id.name
+                else:
+                    id = line.get('am_ref')
+                    amref = line.get('am_ref')
+                lines.append({
+                        'id': id,
+                        'name': line.get('ref'),
+                        'level': 2,
+                        'unfoldable': True,
+                        'unfolded': line_id == id and True or False,
+                        'columns': [{'name': line.get('partner')}, 
+                                    {'name': invoice.customer_category}, 
+                                    {'name': invoice.project_manager.name}, 
+                                    {'name': invoice.user_id.name},
+                                    {'name': amref},
+                                    {'name': line.get('job_name')},
+                                    {'name': self.format_value(line_c)},
+                                    {'name': self.format_value(line_d)},
+                                    {'name': self.format_value(line_b)},
+                                    {'name': '{0:.2f}'.format(margin) }],
                 })
+                line_c = 0
+                line_d = 0
+                line_b = 0
         # Adding profit center lines
         if line_id:
             self.env.cr.execute(unfold_query, params)
@@ -180,12 +209,13 @@ class ReportGrossMargin(models.AbstractModel):
                 if child_line.get('credit') != 0:
                     margin = child_line.get('balance')/child_line.get('credit') * 100
                 lines.append({
-                        'id': '%s_%s' % (child_line.get('id'), child_line.get('name')),
+                        'id': child_line.get('aml_id'),
                         'name': child_line.get('profit_center'),
                         'level': 4,
-                        'caret_options': 'invoice',
+                        'caret_options': 'account.invoice.out',
                         'parent_id': line_id,
                         'columns': [{'name': v} for v in [
+                            '', 
                             '', 
                             '', 
                             '', 
@@ -216,6 +246,7 @@ class ReportGrossMargin(models.AbstractModel):
                 'columns': [{'name': v} for v in [
                         '', 
                         '',
+                        '', 
                         '', 
                         '', 
                         '', 
@@ -264,16 +295,17 @@ class ReportGrossMargin(models.AbstractModel):
                 sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Training') as t_debit,
                 sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Training') as t_credit,
                 \"account_move_line\".analytic_account_id AS aa_id, 
-                p.customer_category, p.name as partner, p.ref, aa.name as job_name
+                p.customer_category, p.name as partner, p.ref, aa.name as job_name, am.ref as am_ref
                 FROM """+tables+"""
                 LEFT JOIN res_partner p ON \"account_move_line\".partner_id = p.id
                 LEFT JOIN account_account ac on \"account_move_line\".account_id = ac.id
+                LEFT JOIN account_move am on \"account_move_line\".move_id = am.id
                 LEFT JOIN account_analytic_account aa on \"account_move_line\".analytic_account_id = aa.id
                 LEFT JOIN product_product pp on \"account_move_line\".product_id = pp.id
                 LEFT JOIN product_template pt on pp.product_tmpl_id = pt.id
                 LEFT JOIN product_category pc on pt.categ_id = pc.id
-                WHERE \"account_move_line\".analytic_account_id IS NOT NULL AND ac.group_id IN (2, 3) """+where_clause+"""
-                GROUP BY aa_id, p.name, p.customer_category, p.ref, job_name ORDER BY job_name
+                WHERE am.ref IS NOT NULL AND ac.group_id IN (2, 3) """+where_clause+"""
+                GROUP BY aa_id, p.name, p.customer_category, p.ref, job_name, am_ref ORDER BY job_name
         """
         params = where_params
         self.env.cr.execute(sql_query, params)
@@ -282,68 +314,161 @@ class ReportGrossMargin(models.AbstractModel):
         total_c = 0
         total_d = 0
         total = 0
+        d_line_c = 0
+        d_line_d = 0
+        d_line_b = 0
+        m_line_c = 0
+        m_line_d = 0
+        m_line_b = 0
+        w_line_c = 0
+        w_line_d = 0
+        w_line_b = 0
+        a_line_c = 0
+        a_line_d = 0
+        a_line_b = 0
+        f_line_c = 0
+        f_line_d = 0
+        f_line_b = 0
+        n_line_c = 0
+        n_line_d = 0
+        n_line_b = 0
+        s_line_c = 0
+        s_line_d = 0
+        s_line_b = 0
+        t_line_c = 0
+        t_line_d = 0
+        t_line_b = 0
+        line_c = 0
+        line_d = 0
+        line_b = 0
         count = 0
-        for line in results:
+        for k, line in enumerate(results):
+            for i, v in line.items():
+                if not v:
+                    line[i] = 0
             total_c += line.get('credit')
             total_d += line.get('debit')
             total += line.get('balance')
-            ++count
-            margin = 0
-            if line.get('credit') != 0:
-                margin = line.get('balance')/line.get('credit') * 100
-            invoice = self.env['account.invoice.line'].search([('account_analytic_id', '=', line.get('aa_id'))], limit=1).invoice_id
-#             raise UserError(_(invoice.date_invoice))
-            lines.append({
-                    'id': line.get('aa_id'),
-                    'name': line.get('ref'),
-                    'level': 2,
-                    'unfoldable': True,
-                    'unfolded': line_id == line.get('aa_id') and True or False,
-                    'columns': [{'name': line.get('partner')}, 
-                                {'name': invoice.customer_category}, 
-                                {'name': invoice.project_manager.name}, 
-                                {'name': invoice.user_id.name},
-                                {'name': line.get('job_name')},
-                                {'name': invoice.origin},
-                                {'name': invoice.move_id.name},
-                                {'name': invoice.date_invoice},
-                                {'name': (line.get('d_credit')*-1)},
-                                {'name': line.get('d_debit')},
-                                {'name': line.get('d_bal')},
-                                {'name': ''},
-                                {'name': line.get('m_credit')},
-                                {'name': line.get('m_debit')},
-                                {'name': line.get('m_bal')},
-                                {'name': ''},
-                                {'name': line.get('w_credit')},
-                                {'name': line.get('w_debit')},
-                                {'name': line.get('w_bal')},
-                                {'name': ''},
-                                {'name': line.get('a_credit')},
-                                {'name': line.get('a_debit')},
-                                {'name': line.get('a_bal')},
-                                {'name': ''},
-                                {'name': line.get('f_credit')},
-                                {'name': line.get('f_debit')},
-                                {'name': line.get('f_bal')},
-                                {'name': ''},
-                                {'name': line.get('n_credit')},
-                                {'name': line.get('n_debit')},
-                                {'name': line.get('n_bal')},
-                                {'name': ''},
-                                {'name': line.get('s_credit')},
-                                {'name': line.get('s_debit')},
-                                {'name': line.get('s_bal')},
-                                {'name': ''},
-                                {'name': line.get('t_credit')},
-                                {'name': line.get('t_debit')},
-                                {'name': line.get('t_bal')},
-                                {'name': ''},
-                                {'name': line.get('credit')},
-                                {'name': line.get('debit')},
-                                {'name': line.get('balance')},
-                                {'name': '{0:.2f}'.format(margin) }],
+            d_line_c += line.get('d_credit')
+            d_line_d += line.get('d_debit')
+            d_line_b += line.get('d_bal')
+            m_line_c += line.get('m_credit')
+            m_line_d += line.get('m_debit')
+            m_line_b += line.get('m_bal')
+            w_line_c += line.get('w_credit')
+            w_line_d += line.get('w_debit')
+            w_line_b += line.get('w_bal')
+            a_line_c += line.get('a_credit')
+            a_line_d += line.get('a_debit')
+            a_line_b += line.get('a_bal')
+            f_line_c += line.get('f_credit')
+            f_line_d += line.get('f_debit')
+            f_line_b += line.get('f_bal')
+            n_line_c += line.get('n_credit')
+            n_line_d += line.get('n_debit')
+            n_line_b += line.get('n_bal')
+            s_line_c += line.get('s_credit')
+            s_line_d += line.get('s_debit')
+            s_line_b += line.get('s_bal')
+            t_line_c += line.get('t_credit')
+            t_line_d += line.get('t_debit')
+            t_line_b += line.get('t_bal')
+            line_c += line.get('credit')
+            line_d += line.get('debit')
+            line_b += line.get('balance')
+            if k+1 < len(results):
+                next_job = results[k+1].get('job_name')
+            else:
+                next_job = ''
+            if line.get('job_name') != next_job or not line.get('job_name'):
+                margin = 0
+                if line_c != 0:
+                    margin = (line_b/line_c) * 100
+                if line.get('job_name'):
+                    invoice = self.env['account.invoice.line'].search([('account_analytic_id', '=', line.get('aa_id'))], limit=1).invoice_id
+                    id = line.get('aa_id')
+                    amref = invoice.move_id.name
+                else:
+                    id = line.get('am_ref')
+                    amref = line.get('am_ref')
+                    invoice = self.env['account.invoice'].search([('reference', '=', amref)], limit=1)
+                lines.append({
+                        'id': line.get('aa_id'),
+                        'name': line.get('ref'),
+                        'level': 2,
+                        'unfoldable': True,
+                        'unfolded': line_id == line.get('aa_id') and True or False,
+                        'columns': [{'name': line.get('partner')}, 
+                                    {'name': invoice.customer_category}, 
+                                    {'name': invoice.project_manager.name}, 
+                                    {'name': invoice.user_id.name},
+                                    {'name': line.get('job_name')},
+                                    {'name': invoice.origin},
+                                    {'name': invoice.move_id.name},
+                                    {'name': invoice.date_invoice},
+                                    {'name': d_line_c},
+                                    {'name': d_line_d},
+                                    {'name': d_line_b},
+                                    {'name': ''},
+                                    {'name': m_line_c},
+                                    {'name': m_line_d},
+                                    {'name': m_line_b},
+                                    {'name': ''},
+                                    {'name': w_line_c},
+                                    {'name': w_line_d},
+                                    {'name': w_line_b},
+                                    {'name': ''},
+                                    {'name': a_line_c},
+                                    {'name': a_line_d},
+                                    {'name': a_line_b},
+                                    {'name': ''},
+                                    {'name': f_line_c},
+                                    {'name': f_line_d},
+                                    {'name': f_line_b},
+                                    {'name': ''},
+                                    {'name': n_line_c},
+                                    {'name': n_line_d},
+                                    {'name': n_line_b},
+                                    {'name': ''},
+                                    {'name': s_line_c},
+                                    {'name': s_line_d},
+                                    {'name': s_line_b},
+                                    {'name': ''},
+                                    {'name': t_line_c},
+                                    {'name': t_line_d},
+                                    {'name': t_line_b},
+                                    {'name': ''},
+                                    {'name': line_c},
+                                    {'name': line_d},
+                                    {'name': line_b},
+                                    {'name': '{0:.2f}'.format(margin) }],
                 })
+                d_line_c = 0
+                d_line_d = 0
+                d_line_b = 0
+                m_line_c = 0
+                m_line_d = 0
+                m_line_b = 0
+                w_line_c = 0
+                w_line_d = 0
+                w_line_b = 0
+                a_line_c = 0
+                a_line_d = 0
+                a_line_b = 0
+                f_line_c = 0
+                f_line_d = 0
+                f_line_b = 0
+                n_line_d = 0
+                n_line_b = 0
+                s_line_c = 0
+                s_line_d = 0
+                s_line_b = 0
+                t_line_c = 0
+                t_line_d = 0
+                t_line_b = 0
+                line_c = 0
+                line_d = 0
+                line_b = 0
         # Don't display level 0 total line in case we are unfolding
         if total and not line_id:
             lines.append({

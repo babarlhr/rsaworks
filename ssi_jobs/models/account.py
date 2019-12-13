@@ -84,8 +84,10 @@ class AccountInvoice(models.Model):
                     'currency_id': diff_currency and inv.currency_id.id,
                     'invoice_id': inv.id
                 })
-            part = inv.partner_shipping_id
-#             part = self.env['res.partner']._find_accounting_partner(inv.partner_shipping_id)
+            if inv.partner_shipping_id:
+                part = inv.partner_shipping_id
+            else:
+                part = self.env['res.partner']._find_accounting_partner(inv.partner_id)
             line = [(0, 0, self.line_get_convert(l, part.id)) for l in iml]
             line = inv.group_lines(iml, line)
 
