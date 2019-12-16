@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) 2018-Present Webkul Software Pvt. Ltd. (<https://webkul.com/>) -->
+<!-- See LICENSE file for full copyright and licensing details. -->
+<!-- License URL : <https://store.webkul.com/license.html/> -->
+
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="ssi_wo_customizations">
+          <field name="name">ssi_wo_customizations.tree</field>
+          <field name="model">mrp.workorder</field>
+          <field name="inherit_id" ref="mrp.mrp_production_workorder_tree_view_inherit"/>
+          <field name="type">tree</field>
+          <field name="arch" type="xml">
+            <xpath expr="//tree[1]/field[@name='name']" position="before">
+              <field name="ssi_job_id"/>
+              <field name="job_urgency"/>
+              <field name="job_deadline"/>
+            </xpath>
+            <xpath expr="//field[@name='qty_production']" position="replace"/>
+            <xpath expr="//field[@name='product_uom_id']" position="replace"/>
+            <xpath expr="//field[@name='product_id']" position="replace"/>
+          </field>
+      </record>
+
+
+      <record model="ir.ui.view" id="ssi_wo_form_customizations">
+          <field name="name">ssi_wo_customizations.form</field>
+          <field name="model">mrp.workorder</field>
+          <field name="inherit_id" ref="mrp.mrp_production_workorder_form_view_inherit"/>
+          <field name="type">form</field>
+          <field name="arch" type="xml">
+            <xpath expr="//header" position="replace">
+                <field name="check_ids" invisible="1"/>
+                <field name="quality_check_fail" invisible="1"/>
+                <header>
+                    <!-- button name="open_tablet_view" type="object" string="Process" attrs="{'invisible': [('state', 'not in', ('ready', 'progress'))]}"/ -->
+                    <button name="button_start" type="object" string="Start Working" attrs="{'invisible': [('state', 'in', ('progress', 'done'))]}"/>
+                    <button name="record_production" type="object" string="Done" class="btn-success" attrs="{'invisible': [('state', 'in', ('ready', 'done'))]}"/>
+                    <field name="state" widget="statusbar" statusbar_visible="pending,ready,progress,done"/>
+                </header>
+            </xpath>
+          </field>
+      </record>
+
+    </data>
+</odoo>
+

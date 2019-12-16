@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+
+<odoo>
+  <record id="storage_tree" model="ir.ui.view">
+      <field name="name">storage.tree</field>
+      <field name="model">storage</field>
+      <field name="arch" type="xml">
+          <tree string="Storage">
+              <field name="equipment_id"/>
+              <field name="equip_square_feet"/>	
+              <field name="customer_id"/>
+              <field name="location_id"/>
+              <field name="check_in"/>
+              <field name="check_out"/>
+              <field name="subscription_id"/>
+              <field name="subscription_price"/>
+              <field name="subscription_uom"/>
+              <field name="last_invoiced"/>
+          </tree>
+      </field>
+  </record>
+
+        <record model="ir.ui.view" id="storage_form_view">
+          <field name="name">storage.form</field>
+          <field name="model">storage</field>
+          <field name="arch" type="xml">
+              <form string="Storage Form">
+                  <sheet>
+                      <group>
+                          <group>
+
+                              <field name="location_id"/>
+                              <field name="equipment_id" context="{'equipment_id':context.get('id')}"/>
+                              <field name="check_in"/>
+                              <field name="check_out"/>
+                          </group>
+                          <group>
+                              <field name="subscription_id"/>
+                              <field name="subscription_price"/>
+                              <field name="subscription_uom" groups="uom.group_uom"/>
+                              <field name="last_invoiced"/>
+                          </group>
+                      </group>
+                  </sheet>
+              </form>
+          </field>
+      </record>
+
+    <record model="ir.ui.view" id="storage_search_view">
+          <field name="name">storage.search</field>
+          <field name="model">storage</field>
+          <field name="arch" type="xml">
+            <search string="Equipment Storage Records">
+                <field name="equipment_id"/>
+                <field name="check_in"/>
+                <field name="customer_id"/>
+                <filter name="checked_out" string="Checked Out" domain="[('check_out', '!=', False)]"/>
+                <group name="groupby">
+                    <filter name="partner_groupby" string="Customer"
+                        context="{'group_by': 'customer_id'}"/>
+                </group>
+            </search>
+          </field>
+    </record>
+
+  <!-- FOR DASHBOARD TO WORK DONT FORGET TO INSTALL DASHBOARD MODULE -->
+  <record id="storage_action" model="ir.actions.act_window">
+      <field name="name">Storage</field>
+      <field name="res_model">storage</field>
+      <field name="view_mode">tree,form</field>
+  </record>
+
+
+  <!-- LOOK INTO SECURITY ISSUES -->
+  <menuitem id="storage_menu" action="storage_action" parent="maintenance.maintenance_reporting"
+    sequence="100" name="Storage"/>
+
+</odoo>

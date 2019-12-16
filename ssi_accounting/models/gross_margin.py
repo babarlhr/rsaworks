@@ -135,14 +135,14 @@ class ReportGrossMargin(models.AbstractModel):
         sql_query = """
             SELECT sum(\"account_move_line\".balance)*-1 AS balance, sum(\"account_move_line\".debit) AS debit, sum(\"account_move_line\".credit) AS credit,
                 \"account_move_line\".analytic_account_id AS aa_id, 
-                p.customer_category, p.name as partner, aa.name as job_name, 
+                p.customer_category, p.id as partner_id, aa.name as job_name, 
                 p.ref, am.ref as am_ref FROM """+tables+"""
                 LEFT JOIN res_partner p ON \"account_move_line\".partner_id = p.id
                 LEFT JOIN account_account ac on \"account_move_line\".account_id = ac.id
                 LEFT JOIN account_move am on \"account_move_line\".move_id = am.id
                 LEFT JOIN account_analytic_account aa on \"account_move_line\".analytic_account_id = aa.id
                 WHERE am.ref IS NOT NULL AND ac.group_id IN (2, 3) """+where_clause+"""
-                GROUP BY aa_id, p.ref, p.name, p.customer_category, job_name, am_ref ORDER BY job_name
+                GROUP BY aa_id, p.ref, p.id, p.customer_category, job_name, am_ref ORDER BY job_name
         """
 
         params = where_params
@@ -180,13 +180,15 @@ class ReportGrossMargin(models.AbstractModel):
                 else:
                     id = line.get('am_ref')
                     amref = line.get('am_ref')
+                browsed_partner = self.env['res.partner'].browse(line.get('partner_id'))
+                partner_name = browsed_partner.parent_id.name and str(browsed_partner.parent_id.name) + ', ' + browsed_partner.name or browsed_partner.name
                 lines.append({
                         'id': id,
                         'name': line.get('ref'),
                         'level': 2,
                         'unfoldable': True,
                         'unfolded': line_id == id and True or False,
-                        'columns': [{'name': line.get('partner')}, 
+                        'columns': [{'name': partner_name}, 
                                     {'name': invoice.customer_category}, 
                                     {'name': invoice.project_manager.name}, 
                                     {'name': invoice.user_id.name},
@@ -295,7 +297,7 @@ class ReportGrossMargin(models.AbstractModel):
                 sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Training') as t_debit,
                 sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Training') as t_credit,
                 \"account_move_line\".analytic_account_id AS aa_id, 
-                p.customer_category, p.name as partner, p.ref, aa.name as job_name, am.ref as am_ref
+                p.customer_category, p.id as partner_id, p.ref, aa.name as job_name, am.ref as am_ref
                 FROM """+tables+"""
                 LEFT JOIN res_partner p ON \"account_move_line\".partner_id = p.id
                 LEFT JOIN account_account ac on \"account_move_line\".account_id = ac.id
@@ -305,7 +307,7 @@ class ReportGrossMargin(models.AbstractModel):
                 LEFT JOIN product_template pt on pp.product_tmpl_id = pt.id
                 LEFT JOIN product_category pc on pt.categ_id = pc.id
                 WHERE am.ref IS NOT NULL AND ac.group_id IN (2, 3) """+where_clause+"""
-                GROUP BY aa_id, p.name, p.customer_category, p.ref, job_name, am_ref ORDER BY job_name
+                GROUP BY aa_id, p.id, p.customer_category, p.ref, job_name, am_ref ORDER BY job_name
         """
         params = where_params
         self.env.cr.execute(sql_query, params)
@@ -392,13 +394,15 @@ class ReportGrossMargin(models.AbstractModel):
                     id = line.get('am_ref')
                     amref = line.get('am_ref')
                     invoice = self.env['account.invoice'].search([('reference', '=', amref)], limit=1)
+                browsed_partner = self.env['res.partner'].browse(line.get('partner_id'))
+                partner_name = browsed_partner.parent_id.name and str(browsed_partner.parent_id.name) + ', ' + browsed_partner.name or browsed_partner.name
                 lines.append({
                         'id': line.get('aa_id'),
                         'name': line.get('ref'),
                         'level': 2,
                         'unfoldable': True,
                         'unfolded': line_id == line.get('aa_id') and True or False,
-                        'columns': [{'name': line.get('partner')}, 
+                        'columns': [{'name': partner_name}, 
                                     {'name': invoice.customer_category}, 
                                     {'name': invoice.project_manager.name}, 
                                     {'name': invoice.user_id.name},

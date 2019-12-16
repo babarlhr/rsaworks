@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <data>
+
+      <record model="ir.ui.view" id="ssi_mrp_production_workorder_calendar">
+          <field name="name">ssi_mrp_production_workorder_calendar</field>
+          <field name="model">mrp.workorder</field>
+          <field name="inherit_id" ref="mrp.workcenter_line_calendar"/>
+          <field name="arch" type="xml">
+			  <xpath expr="//field[@name='workcenter_id']" position="after">
+                    <field name="ssi_job_id"/>
+                    <field name="name"/>
+                    <field name="eq_rating" class="oe_inline"/>
+                    <field name="eq_rating_unit" class="oe_inline"/>
+              </xpath>
+		  </field>
+      </record>
+
+    </data>
+</odoo>

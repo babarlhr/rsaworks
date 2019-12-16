@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <data>
+
+      <record model="ir.ui.view" id="ssi_crm_lead_form">
+          <field name="name">ssi_crm_lead_form</field>
+          <field name="model">crm.lead</field>
+          <field name="inherit_id" ref="crm.crm_case_form_view_oppor"/>
+          <field name="type">form</field>
+          <field name="arch" type="xml">
+              <xpath expr="//field[@name='user_id']" position="after">
+                  <field name="project_manager"/>
+              </xpath>
+          </field>
+      </record>
+
+    </data>
+</odoo>
+
