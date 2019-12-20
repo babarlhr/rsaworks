@@ -37,7 +37,7 @@
                                     <th>Date</th>
                                     <th>Invoice</th>
                                     <th>Inv Amount</th>
-                                    <th>Discount</th>
+                                    <!-- th>Discount</th -->
                                     <th>Payment</th>
                                     <th>Memo</th>
                                 </tr>
@@ -46,7 +46,7 @@
                                     <td>${line.date}</td>
                                     <td>${line.communication}</td>
                                     <td align="right">${line.amount_currency}</td>
-                                    <td align="right">0.00</td>
+                                    <!-- td align="right">0.00</td -->
                                     <td align="right">${line.amount_currency}</td>
                                     <td>${line.name}</td>
                                 </tr>
@@ -54,7 +54,7 @@
                                 <tr>
                                     <th colspan="2">Totals</th>
                                     <th align="right">${format_amount(object.amount_currency, object.currency_id)}</th>
-                                    <th align="right">0.00</th>
+                                    <!-- th align="right">0.00</th -->
                                     <th align="right">${format_amount(object.amount_currency, object.currency_id)}</th>
                                     <th></th>
                                 </tr>

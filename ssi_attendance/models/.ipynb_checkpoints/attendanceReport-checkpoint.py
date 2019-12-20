@@ -168,14 +168,17 @@ class AttendanceReport(models.Model):
                     if r.leave_type.time_type == 'leave' or not r.leave_type.time_type:
                         st = st + r.total_hours
                         dw = dw + r.days_worked
+                record.over_time = 0
                 if st >= record.start_hours and dw < 7 and not record.leave_type.time_type:
                     record.over_time = st - r.start_hours - last_day if (st - r.start_hours - last_day) > 0 else 0
                 if st >= record.start_hours and dw == 7 and not record.leave_type.time_type:
+                    if record.employee_id.id == 570:
+                        raise UserError(_('here2'))
                     record.over_time = st - r.start_hours - last_day if (st - r.start_hours - last_day) > 0 else 0
-                else:
-                    record.over_time = 0
             else:
                 record.over_time = 0
+#             if record.employee_id.id == 570:
+#                 raise UserError(_(record.over_time))
                 
     def _compute_dt(self):
         for record in self:

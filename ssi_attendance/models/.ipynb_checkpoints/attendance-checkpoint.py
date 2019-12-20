@@ -21,6 +21,24 @@ class HrAttendance(models.Model):
     hour_type = fields.Many2one('hr.leave.type', string="Leave Type", readonly=True)
     attendance_lines = fields.One2many('hr.attendance.line', 'attendance_id', string='Attendance Lines', copy=True)
     manager_id = fields.Many2one('hr.employee', related="employee_id.parent_id", string="Manager", store=True)
+    check_in_inv = fields.Datetime(string="Check In")
+    check_out_inv = fields.Datetime(string="Check Out")
+    worked_actual_inv = fields.Float(string='Worked Hours Actual')
+    worked_hours_inv = fields.Float(string='Worked Hours')
+    line_count = fields.Integer(string='Attedance Line Count', compute='_get_line_count')
+    worked_hours_actual = fields.Float(string='Worked Hours Actual', compute='_compute_actual_hours')
+
+    @api.depends('attendance_lines')
+    def _get_line_count(self):
+        for record in self:
+            record.line_count = len(record.attendance_lines)
+
+    @api.depends('attendance_lines')
+    def _compute_actual_hours(self):
+        total = 0
+        for line in self.attendance_lines.sorted(key=lambda r: r.check_in):
+            total += line.worked_hours
+        self.worked_hours_actual = total
 
     @api.one
     def approve_attendance(self):
@@ -38,12 +56,67 @@ class HrAttendance(models.Model):
             self.env['mrp.workcenter.productivity'].sudo().create(data)
         self.status = 'approved'
 
+    @api.onchange('attendance_lines')
+    def _onchange_attendance_line(self):
+        # sync the start / stop times.
+        first = True
+        vals = {}
+        total = 0
+        for line in self.attendance_lines.sorted(key=lambda r: r.check_in):
+            if first:
+                self.check_in_inv = line.check_in
+                self.check_in = line.check_in
+                first = False
+            self.check_out_inv = line.check_out
+            self.check_out = line.check_out
+        self.worked_actual_inv = self.worked_hours_actual
+        self.worked_hours_inv = self.worked_hours
+                
+    @api.model
+    def create(self, vals):
+        if 'check_in_inv' in vals:
+            vals['check_in'] = not vals['check_in_inv'] and vals['check_in'] or vals['check_in_inv']
+#             vals['check_in'] = vals['check_in_inv']
+        if 'check_out_inv' in vals:
+            vals['check_out'] = not vals['check_out_inv'] and vals['check_out'] or vals['check_out_inv']
+#             vals['check_out'] = vals['check_out_inv']
+        if 'worked_actual_inv' in vals:
+            if round(vals['worked_hours_inv'],2) != round(vals['worked_actual_inv'],2) and vals['worked_actual_inv'] > 0:
+                raise UserError(_('Warning: The hours and job hours do not balance.'))
+        if 'worked_actual_inv' in vals:
+            del vals['worked_actual_inv']
+        if 'worked_hours_inv' in vals:
+            del vals['worked_hours_inv']
+        res = super(HrAttendance, self).create(vals)
+        return res
+
+    @api.multi
+    def write(self, vals):
+        if 'check_in_inv' in vals:
+            vals['check_in'] = not vals['check_in_inv'] and vals['check_in'] or vals['check_in_inv']
+#             vals['check_in'] = vals['check_in_inv']
+        if 'check_out_inv' in vals:
+            vals['check_out'] = not vals['check_out_inv'] and vals['check_out'] or vals['check_out_inv']
+#             vals['check_out'] = vals['check_out_inv']
+        if 'worked_actual_inv' in vals:
+            if round(vals['worked_hours_inv'],2) != round(vals['worked_actual_inv'],2) and vals['worked_actual_inv'] > 0:
+                raise UserError(_('Warning: The hours and job hours do not balance.'))
+        if 'worked_actual_inv' in vals:
+            del vals['worked_actual_inv']
+        if 'worked_hours_inv' in vals:
+            del vals['worked_hours_inv']
+        res = super(HrAttendance, self).write(vals)
+        return res
+        
 class HrAttendanceLine(models.Model):
     _name = "hr.attendance.line"
     _description = "Attendance  Detail"
 
     def _default_employee(self):
-        return self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1)
+        if self.env.context.get('employee_id'):
+            return self.env.context.get('employee_id')
+        else:
+            return self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1)
 
     employee_id = fields.Many2one('hr.employee', string="Employee", default=_default_employee, required=True, ondelete='cascade', index=True)
     attendance_id = fields.Many2one('hr.attendance', string='Attendance ID', required=True, ondelete='cascade', index=True, copy=False)
@@ -54,11 +127,9 @@ class HrAttendanceLine(models.Model):
         'open', 'Open'), ('approved', 'Approved')], default='open', track_visibility='onchange')
 
     job_id = fields.Many2one(
-       'ssi_jobs', ondelete='set null', string="Job", index=True)
+       'ssi_jobs', ondelete='set null', string="Job", index=True, required=True)
     workorder_id = fields.Many2one(
-       'mrp.workorder', ondelete='set null', string="Work Order", index=True)
-#    labor_code_id = fields.Many2one(
-#        'x_labor.codes', ondelete='set null', string="Labor Code", index=True)
+       'mrp.workorder', ondelete='set null', string="Work Order", index=True, required=True)
 
     @api.depends('check_in', 'check_out')
     def _compute_worked_hours(self):
@@ -67,23 +138,9 @@ class HrAttendanceLine(models.Model):
                 delta = line.check_out - line.check_in
                 line.worked_hours = delta.total_seconds() / 3600.0
 
-    employee_id = fields.Many2one('hr.employee', string="Employee", default=_default_employee, required=True, ondelete='cascade', index=True)
-    attendance_id = fields.Many2one('hr.attendance', string='Attendance ID', required=True, ondelete='cascade', index=True, copy=False)
-    check_in = fields.Datetime(string="Check In", default=fields.Datetime.now, required=True)
-    check_out = fields.Datetime(string="Check Out")
-    worked_hours = fields.Float(string='Worked Hours', compute='_compute_worked_hours', store=True, readonly=True)
-    status = fields.Selection(string="Status", selection=[(
-        'open', 'Open'), ('approved', 'Approved')], default='open', track_visibility='onchange')
-
-    job_id = fields.Many2one(
-       'ssi_jobs', ondelete='set null', string="Job", index=True)
-    workorder_id = fields.Many2one(
-       'mrp.workorder', ondelete='set null', string="Work Order", index=True)
-
     @api.multi
     def write(self, values):
         """Override default Odoo write function and extend."""
-#         raise UserError(_(values))
         # Do your custom logic here
         if self.attendance_id.check_in and self.attendance_id.check_in == self.check_in and 'check_in' in values:
             self.attendance_id.check_in = values['check_in']

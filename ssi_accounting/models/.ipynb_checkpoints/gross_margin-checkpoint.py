@@ -133,9 +133,13 @@ class ReportGrossMargin(models.AbstractModel):
 
 
         sql_query = """
-            SELECT sum(\"account_move_line\".balance)*-1 AS balance, sum(\"account_move_line\".debit) AS debit, sum(\"account_move_line\".credit) AS credit,
+            SELECT sum(\"account_move_line\".balance)*-1 AS balance, 
+                sum(\"account_move_line\".debit) FILTER (WHERE ac.group_id = 3) AS cogs_debit, 
+                sum(\"account_move_line\".credit) FILTER (WHERE ac.group_id = 3) AS cogs_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE ac.group_id = 2) AS rev_debit, 
+                sum(\"account_move_line\".credit) FILTER (WHERE ac.group_id = 2) AS rev_credit,
                 \"account_move_line\".analytic_account_id AS aa_id, 
-                p.customer_category, p.id as partner_id, aa.name as job_name, 
+                p.customer_category, p.id as partner_id, aa.name as job_name,
                 p.ref, am.ref as am_ref FROM """+tables+"""
                 LEFT JOIN res_partner p ON \"account_move_line\".partner_id = p.id
                 LEFT JOIN account_account ac on \"account_move_line\".account_id = ac.id
@@ -149,19 +153,27 @@ class ReportGrossMargin(models.AbstractModel):
         self.env.cr.execute(sql_query, params)
         results = self.env.cr.dictfetchall()
 
+        total_r = 0
         total_c = 0
-        total_d = 0
         total = 0
-        line_c = 0
-        line_d = 0
-        line_b = 0
         count = 0
+        line_r = 0
+        line_c = 0
+        line_b = 0
         for k, line in enumerate(results):
-            total_c += line.get('credit')
-            total_d += line.get('debit')
+            if not line.get('rev_credit'):
+                line['rev_credit'] = 0 
+            if not line.get('rev_debit'):
+                line['rev_debit'] = 0 
+            if not line.get('cogs_credit'):
+                line['cogs_credit'] = 0 
+            if not line.get('cogs_debit'):
+                line['cogs_debit'] = 0 
+            total_r += line.get('rev_credit') - line.get('rev_debit', 0)
+            total_c += line.get('cogs_debit', 0) - line.get('cogs_credit', 0)
             total += line.get('balance')
-            line_c += line.get('credit')
-            line_d += line.get('debit')
+            line_r += line.get('rev_credit', 0) - line.get('rev_debit', 0)
+            line_c += line.get('cogs_debit', 0) - line.get('cogs_credit', 0)
             line_b += line.get('balance')
             if k+1 < len(results):
                 next_job = results[k+1].get('job_name')
@@ -171,8 +183,8 @@ class ReportGrossMargin(models.AbstractModel):
 #             if True:
                 ++count
                 margin = 0
-                if line_c != 0:
-                    margin = (line_b/line_c) * 100
+                if line_r != 0:
+                    margin = (line_b/line_r) * 100
                 invoice = self.env['account.invoice.line'].search([('account_analytic_id', '=', line.get('aa_id'))], limit=1).invoice_id
                 if line.get('job_name'):
                     id = line.get('aa_id')
@@ -194,13 +206,13 @@ class ReportGrossMargin(models.AbstractModel):
                                     {'name': invoice.user_id.name},
                                     {'name': amref},
                                     {'name': line.get('job_name')},
+                                    {'name': self.format_value(line_r)},
                                     {'name': self.format_value(line_c)},
-                                    {'name': self.format_value(line_d)},
                                     {'name': self.format_value(line_b)},
                                     {'name': '{0:.2f}'.format(margin) }],
                 })
+                line_r = 0
                 line_c = 0
-                line_d = 0
                 line_b = 0
         # Adding profit center lines
         if line_id:
@@ -252,10 +264,10 @@ class ReportGrossMargin(models.AbstractModel):
                         '', 
                         '', 
                         '', 
+                        self.format_value(total_r), 
                         self.format_value(total_c), 
-                        self.format_value(total_d), 
                         self.format_value(total),
-                        '{0:.2f}'.format(total/total_c * 100),
+                        '{0:.2f}'.format(total/total_r * 100),
                     ]],
                 })
 #             raise UserError(_(lines))
@@ -270,32 +282,50 @@ class ReportGrossMargin(models.AbstractModel):
 
         sql_query = """
             SELECT sum(\"account_move_line\".balance)*-1 AS balance, 
-                sum(\"account_move_line\".debit) AS debit, 
-                sum(\"account_move_line\".credit) AS credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE ac.group_id = 3) AS cogs_debit, 
+                sum(\"account_move_line\".credit) FILTER (WHERE ac.group_id = 3) AS cogs_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE ac.group_id = 2) AS rev_debit, 
+                sum(\"account_move_line\".credit) FILTER (WHERE ac.group_id = 2) AS rev_credit,
                 sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'Disassembly') as d_bal,
-                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Disassembly') as d_debit,
-                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Disassembly') as d_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Disassembly' and ac.group_id = 3) as d_cogs_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Disassembly' and ac.group_id = 3) as d_cogs_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Disassembly' and ac.group_id = 2) as d_rev_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Disassembly' and ac.group_id = 2) as d_rev_credit,
                 sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'Machine Shop') as m_bal,
-                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Machine Shop') as m_debit,
-                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Machine Shop') as m_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Machine Shop' and ac.group_id = 3) as m_cogs_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Machine Shop' and ac.group_id = 3) as m_cogs_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Machine Shop' and ac.group_id = 2) as m_rev_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Machine Shop' and ac.group_id = 2) as m_rev_credit,
                 sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'Winding') as w_bal,
-                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Winding') as w_debit,
-                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Winding') as w_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Winding' and ac.group_id = 3) as w_cogs_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Winding' and ac.group_id = 3) as w_cogs_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Winding' and ac.group_id = 2) as w_rev_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Winding' and ac.group_id = 2) as w_rev_credit,
                 sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'Assembly') as a_bal,
-                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Assembly') as a_debit,
-                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Assembly') as a_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Assembly' and ac.group_id = 3) as a_cogs_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Assembly' and ac.group_id = 3) as a_cogs_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Assembly' and ac.group_id = 2) as a_rev_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Assembly' and ac.group_id = 2) as a_rev_credit,
                 sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'Field Services') as f_bal,
-                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Field Services') as f_debit,
-                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Field Services') as f_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Field Services' and ac.group_id = 3) as f_cogs_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Field Services' and ac.group_id = 3) as f_cogs_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Field Services' and ac.group_id = 2) as f_rev_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Field Services' and ac.group_id = 2) as f_rev_credit,
                 sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'New Product Sales') as n_bal,
-                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'New Product Sales') as n_debit,
-                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'New Product Sales') as n_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'New Product Sales' and ac.group_id = 3) as n_cogs_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'New Product Sales' and ac.group_id = 3) as n_cogs_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'New Product Sales' and ac.group_id = 2) as n_rev_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'New Product Sales' and ac.group_id = 2) as n_rev_credit,
                 sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'Storage') as s_bal,
-                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Storage') as s_debit,
-                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Storage') as s_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Storage' and ac.group_id = 3) as s_cogs_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Storage' and ac.group_id = 3) as s_cogs_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Storage' and ac.group_id = 2) as s_rev_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Storage' and ac.group_id = 2) as s_rev_credit,
                 sum(\"account_move_line\".balance) FILTER (WHERE pc.profit_center = 'Training') as t_bal,
-                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Training') as t_debit,
-                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Training') as t_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Training' and ac.group_id = 3) as t_cogs_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Training' and ac.group_id = 3) as t_cogs_credit,
+                sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Training' and ac.group_id = 2) as t_rev_debit,
+                sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Training' and ac.group_id = 2) as t_rev_credit,
                 \"account_move_line\".analytic_account_id AS aa_id, 
                 p.customer_category, p.id as partner_id, p.ref, aa.name as job_name, am.ref as am_ref
                 FROM """+tables+"""
@@ -313,70 +343,70 @@ class ReportGrossMargin(models.AbstractModel):
         self.env.cr.execute(sql_query, params)
         results = self.env.cr.dictfetchall()
 
+        total_r = 0
         total_c = 0
-        total_d = 0
         total = 0
+        d_line_r = 0
         d_line_c = 0
-        d_line_d = 0
         d_line_b = 0
+        m_line_r = 0
         m_line_c = 0
-        m_line_d = 0
         m_line_b = 0
+        w_line_r = 0
         w_line_c = 0
-        w_line_d = 0
         w_line_b = 0
+        a_line_r = 0
         a_line_c = 0
-        a_line_d = 0
         a_line_b = 0
+        f_line_r = 0
         f_line_c = 0
-        f_line_d = 0
         f_line_b = 0
+        n_line_r = 0
         n_line_c = 0
-        n_line_d = 0
         n_line_b = 0
+        s_line_r = 0
         s_line_c = 0
-        s_line_d = 0
         s_line_b = 0
+        t_line_r = 0
         t_line_c = 0
-        t_line_d = 0
         t_line_b = 0
+        line_r = 0
         line_c = 0
-        line_d = 0
         line_b = 0
         count = 0
         for k, line in enumerate(results):
             for i, v in line.items():
                 if not v:
                     line[i] = 0
-            total_c += line.get('credit')
-            total_d += line.get('debit')
+            total_r += line.get('rev_credit', 0) - line.get('rev_debit', 0)
+            total_c += line.get('cogs_debit', 0) - line.get('cogs_credit', 0)
             total += line.get('balance')
-            d_line_c += line.get('d_credit')
-            d_line_d += line.get('d_debit')
+            d_line_r += line.get('d_rev_credit', 0) - line.get('d_rev_debit', 0)
+            d_line_c += line.get('d_cogs_debit', 0) - line.get('d_cogs_credit', 0)
             d_line_b += line.get('d_bal')
-            m_line_c += line.get('m_credit')
-            m_line_d += line.get('m_debit')
+            m_line_r += line.get('m_rev_credit', 0) - line.get('m_rev_debit', 0)
+            m_line_c += line.get('m_cogs_debit', 0) - line.get('m_cogs_credit', 0)
             m_line_b += line.get('m_bal')
-            w_line_c += line.get('w_credit')
-            w_line_d += line.get('w_debit')
+            w_line_r += line.get('w_rev_credit', 0) - line.get('w_rev_debit', 0)
+            w_line_c += line.get('w_cogs_debit', 0) - line.get('w_cogs_credit', 0)
             w_line_b += line.get('w_bal')
-            a_line_c += line.get('a_credit')
-            a_line_d += line.get('a_debit')
+            a_line_r += line.get('a_rev_credit', 0) - line.get('a_rev_debit', 0)
+            a_line_c += line.get('a_cogs_debit', 0) - line.get('a_cogs_credit', 0)
             a_line_b += line.get('a_bal')
-            f_line_c += line.get('f_credit')
-            f_line_d += line.get('f_debit')
+            f_line_r += line.get('f_rev_credit', 0) - line.get('f_rev_debit', 0)
+            f_line_c += line.get('f_cogs_debit', 0) - line.get('f_cogs_credit', 0)
             f_line_b += line.get('f_bal')
-            n_line_c += line.get('n_credit')
-            n_line_d += line.get('n_debit')
+            n_line_r += line.get('n_rev_credit', 0) - line.get('n_rev_debit', 0)
+            n_line_c += line.get('n_cogs_debit', 0) - line.get('n_cogs_credit', 0)
             n_line_b += line.get('n_bal')
-            s_line_c += line.get('s_credit')
-            s_line_d += line.get('s_debit')
+            s_line_r += line.get('s_rev_credit', 0) - line.get('s_rev_debit', 0)
+            s_line_c += line.get('s_cogs_debit', 0) - line.get('s_cogs_credit', 0)
             s_line_b += line.get('s_bal')
-            t_line_c += line.get('t_credit')
-            t_line_d += line.get('t_debit')
+            t_line_r += line.get('t_rev_credit', 0) - line.get('t_rev_debit', 0)
+            t_line_c += line.get('t_cogs_debit', 0) - line.get('t_cogs_credit', 0)
             t_line_b += line.get('t_bal')
-            line_c += line.get('credit')
-            line_d += line.get('debit')
+            line_r += line.get('rev_credit', 0) - line.get('rev_debit', 0)
+            line_c += line.get('cogs_debit', 0) - line.get('cogs_credit', 0)
             line_b += line.get('balance')
             if k+1 < len(results):
                 next_job = results[k+1].get('job_name')
@@ -410,68 +440,69 @@ class ReportGrossMargin(models.AbstractModel):
                                     {'name': invoice.origin},
                                     {'name': invoice.move_id.name},
                                     {'name': invoice.date_invoice},
+                                    {'name': d_line_r},
                                     {'name': d_line_c},
-                                    {'name': d_line_d},
                                     {'name': d_line_b},
                                     {'name': ''},
+                                    {'name': m_line_r},
                                     {'name': m_line_c},
-                                    {'name': m_line_d},
                                     {'name': m_line_b},
                                     {'name': ''},
+                                    {'name': w_line_r},
                                     {'name': w_line_c},
-                                    {'name': w_line_d},
                                     {'name': w_line_b},
                                     {'name': ''},
+                                    {'name': a_line_r},
                                     {'name': a_line_c},
-                                    {'name': a_line_d},
                                     {'name': a_line_b},
                                     {'name': ''},
+                                    {'name': f_line_r},
                                     {'name': f_line_c},
-                                    {'name': f_line_d},
                                     {'name': f_line_b},
                                     {'name': ''},
+                                    {'name': n_line_r},
                                     {'name': n_line_c},
-                                    {'name': n_line_d},
                                     {'name': n_line_b},
                                     {'name': ''},
+                                    {'name': s_line_r},
                                     {'name': s_line_c},
-                                    {'name': s_line_d},
                                     {'name': s_line_b},
                                     {'name': ''},
+                                    {'name': t_line_r},
                                     {'name': t_line_c},
-                                    {'name': t_line_d},
                                     {'name': t_line_b},
                                     {'name': ''},
+                                    {'name': line_r},
                                     {'name': line_c},
-                                    {'name': line_d},
                                     {'name': line_b},
                                     {'name': '{0:.2f}'.format(margin) }],
                 })
+                d_line_r = 0
                 d_line_c = 0
-                d_line_d = 0
                 d_line_b = 0
+                m_line_r = 0
                 m_line_c = 0
-                m_line_d = 0
                 m_line_b = 0
+                w_line_r = 0
                 w_line_c = 0
-                w_line_d = 0
                 w_line_b = 0
+                a_line_r = 0
                 a_line_c = 0
-                a_line_d = 0
                 a_line_b = 0
+                f_line_r = 0
                 f_line_c = 0
-                f_line_d = 0
                 f_line_b = 0
-                n_line_d = 0
+                n_line_r = 0
+                n_line_c = 0
                 n_line_b = 0
+                s_line_r = 0
                 s_line_c = 0
-                s_line_d = 0
                 s_line_b = 0
+                t_line_r = 0
                 t_line_c = 0
-                t_line_d = 0
                 t_line_b = 0
+                line_r = 0
                 line_c = 0
-                line_d = 0
                 line_b = 0
         # Don't display level 0 total line in case we are unfolding
         if total and not line_id:
@@ -486,10 +517,10 @@ class ReportGrossMargin(models.AbstractModel):
                         '', 
                         '', 
                         '', 
+                        self.format_value(total_r), 
                         self.format_value(total_c), 
-                        self.format_value(total_d), 
                         self.format_value(total),
-                        '{0:.2f}'.format(total/total_c * 100),
+                        '{0:.2f}'.format(total/total_r * 100),
                     ]],
                 })
 #             raise UserError(_(lines))

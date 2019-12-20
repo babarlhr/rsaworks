@@ -9,14 +9,14 @@
         <field name="type">form</field>
             <field name="arch" type="xml">
 			<xpath expr="//field[@name='check_out']" position="after">
-				<field name="attendance_lines"> 
-				  <tree string="lines" create="true" edit="true">
+				<field name="attendance_lines" context ="{'employee_id': employee_id}"> 
+				  <tree string="lines" create="true" edit="true" default_order="check_in">
 					<field name="check_in"/>
 					<field name="check_out"/>
 					<field name="job_id"/>
 					<field name="workorder_id"/>
-					<field name="worked_hours"/>
-					<field name="status"/>
+					<field name="worked_hours" string="Job Hours" sum="Total Worked Hours"/>
+					<field name="status" readonly="1"/>
 				  </tree>
 				</field>
 			</xpath>
@@ -36,10 +36,10 @@
                           <field name="employee_id"/>
                           <field name="check_in"/>
                           <field name="check_out"/>
-                          <field name="worked_hours"/>
+                          <field name="worked_hours" string="Job Hours"/>
                         </group>
                         <group>
-                          <field name="status"/>
+                          <field name="status" readonly="1"/>
                           <field name="job_id"/>
                           <field name="workorder_id" domain="[('ssi_job_id', '=', job_id)]"/>
                         </group>

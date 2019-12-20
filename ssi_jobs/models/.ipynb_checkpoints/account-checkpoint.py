@@ -12,11 +12,12 @@ class AccountInvoice(models.Model):
     customer_category = fields.Selection(
         [('Top Account', 'Top Account'), ('Key Account', 'Key Account'), ('Account', 'Account'), ('New Account', 'New Account')], string='Customer Category')
 
-    @api.multi
+    @api.model
     def create(self, vals):
-        so = self.env['sale.order'].search([('name', '=', vals.get('origin'))])
-        vals['project_manager'] = so.project_manager.id
-        vals['customer_category'] = so.customer_category
+        if vals.get('origin'):
+            so = self.env['sale.order'].search([('name', '=', vals.get('origin'))])
+            vals['project_manager'] = so.project_manager.id
+            vals['customer_category'] = so.customer_category
         res = super(AccountInvoice, self).create(vals)
         return res
 
@@ -84,8 +85,10 @@ class AccountInvoice(models.Model):
                     'currency_id': diff_currency and inv.currency_id.id,
                     'invoice_id': inv.id
                 })
-            part = inv.partner_shipping_id
-#             part = self.env['res.partner']._find_accounting_partner(inv.partner_shipping_id)
+            if inv.partner_shipping_id:
+                part = inv.partner_shipping_id
+            else:
+                part = self.env['res.partner']._find_accounting_partner(inv.partner_id)
             line = [(0, 0, self.line_get_convert(l, part.id)) for l in iml]
             line = inv.group_lines(iml, line)
 

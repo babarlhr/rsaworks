@@ -12,11 +12,12 @@ class AccountInvoice(models.Model):
     customer_category = fields.Selection(
         [('Top Account', 'Top Account'), ('Key Account', 'Key Account'), ('Account', 'Account'), ('New Account', 'New Account')], string='Customer Category')
 
-    @api.multi
+    @api.model
     def create(self, vals):
-        so = self.env['sale.order'].search([('name', '=', vals.get('origin'))])
-        vals['project_manager'] = so.project_manager.id
-        vals['customer_category'] = so.customer_category
+        if vals.get('origin'):
+            so = self.env['sale.order'].search([('name', '=', vals.get('origin'))])
+            vals['project_manager'] = so.project_manager.id
+            vals['customer_category'] = so.customer_category
         res = super(AccountInvoice, self).create(vals)
         return res
 
