@@ -40,8 +40,8 @@
                         </group>
                         <group>
                           <field name="status" readonly="1"/>
-                          <field name="job_id"/>
-                          <field name="workorder_id" domain="[('ssi_job_id', '=', job_id)]"/>
+                          <field name="job_id" required="1"/>
+                          <field name="workorder_id" domain="[('ssi_job_id', '=', job_id)]" required="1"/>
                         </group>
                       <separator/>
                     </group>

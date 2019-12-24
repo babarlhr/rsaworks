@@ -44,7 +44,8 @@ class HrEmployeeCustom(models.Model):
                 if close:
                     work_order = self.env['mrp.workorder'].search([('id', '=', wo)], limit=1)
                     if work_order:
-                        work_order.state = 'done'
+                        res = work_order.record_production()
+#                         work_order.state = 'done'
             else:
                 modified_attendance = self.sudo(self.user_id.id).attendance_action_change()
         else:
@@ -53,7 +54,8 @@ class HrEmployeeCustom(models.Model):
                 if close:
                     work_order = self.env['mrp.workorder'].search([('id', '=', wo)], limit=1)
                     if work_order:
-                        work_order.state = 'done'
+                        res = work_order.record_production()
+#                         work_order.state = 'done'
             else:
                 modified_attendance = self.sudo().attendance_action_change()
         action_message['attendance'] = modified_attendance.read()[0]

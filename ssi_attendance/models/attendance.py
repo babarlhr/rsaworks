@@ -127,9 +127,9 @@ class HrAttendanceLine(models.Model):
         'open', 'Open'), ('approved', 'Approved')], default='open', track_visibility='onchange')
 
     job_id = fields.Many2one(
-       'ssi_jobs', ondelete='set null', string="Job", index=True, required=True)
+       'ssi_jobs', ondelete='set null', string="Job", index=True)
     workorder_id = fields.Many2one(
-       'mrp.workorder', ondelete='set null', string="Work Order", index=True, required=True)
+       'mrp.workorder', ondelete='set null', string="Work Order", index=True)
 
     @api.depends('check_in', 'check_out')
     def _compute_worked_hours(self):

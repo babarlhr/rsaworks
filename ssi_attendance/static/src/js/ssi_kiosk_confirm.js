@@ -220,6 +220,7 @@ var KioskConfirm = AbstractAction.extend({
           }).then(function(results) {
             console.log(results);
             if (results) {
+              html = html + `<option value="" class="text-success font-weight-bold">Select a Workorder</option>`;
               results.forEach(function(w) {
                   if (w.state == 'done') {
                     html = html + `<option value="${w.id}" class="text-success font-weight-bold">${w.display_name}</option>`;

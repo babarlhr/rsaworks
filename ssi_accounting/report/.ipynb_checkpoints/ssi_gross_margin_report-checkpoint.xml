@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+    <record id="view_gross_margin_report_pivot" model="ir.ui.view">
+         <field name="name">gross.margin.report.pivot</field>
+         <field name="model">gross.margin.report</field>
+         <field name="arch" type="xml">
+             <pivot string="Gross Margin Analysis" disable_linking="True">
+                 <field name="analytic_account_id" type="row"/>
+                 <field name="product_id" type="row"/>
+                 <field name="user_type_id" type="col"/>
+                 <field name="balance" type="measure"/>
+             </pivot>
+         </field>
+    </record>
+
+    <record id="view_gross_margin_report_graph" model="ir.ui.view">
+         <field name="name">gross.margin.report.graph</field>
+         <field name="model">gross.margin.report</field>
+         <field name="arch" type="xml">
+             <graph string="Gross Margin Analysis">
+                 <field name="product_id"/>
+                 <field name="balance" type="measure"/>
+             </graph>
+         </field>
+    </record>
+
+    <record id="view_gross_margin_report_tree" model="ir.ui.view">
+         <field name="name">gross.margin.report.tree</field>
+         <field name="model">gross.margin.report</field>
+         <field name="arch" type="xml">
+            <tree string="Gross Margin Report">
+                <field name="analytic_account_id"/>
+                <field name="user_type_id"/>
+                <field name="debit"/>
+                <field name="credit"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Custom reports (aka filters) -->
+    <record id="filter_gross_margin_report_salespersons" model="ir.filters">
+        <field name="name">By Salespersons</field>
+        <field name="model_id">gross.margin.report</field>
+        <field name="domain">[]</field>
+        <field name="user_id" eval="False"/>
+        <field name="context">{'group_by': ['date:month', 'user_id']}</field>
+    </record>
+    <record id="filter_gross_margin_product" model="ir.filters">
+        <field name="name">By Product</field>
+        <field name="model_id">gross.margin.report</field>
+        <field name="domain">[]</field>
+        <field name="context">{'group_by': ['date:month', 'product_id'], 'set_visible':True, 'residual_invisible':True}</field>
+    </record>
+    <record id="filter_gross_margin_product_category" model="ir.filters">
+        <field name="name">By Product Category</field>
+        <field name="model_id">gross.margin.report</field>
+        <field name="domain">[]</field>
+        <field name="user_id" eval="False"/>
+        <field name="context">{'group_by': ['date:month', 'categ_id'], 'residual_invisible':True}</field>
+    </record>
+
+    <record id="view_gross_margin_report_search" model="ir.ui.view">
+        <field name="name">gross.margin.report.search</field>
+        <field name="model">gross.margin.report</field>
+        <field name="arch" type="xml">
+            <search string="Gross Margin Analysis">
+                <separator/>
+                <field name="partner_id" operator="child_of"/>
+                <field name="user_id" />
+                <field name="product_id" />
+                <field name="categ_id" filter_domain="[('categ_id', 'child_of', self)]"/>
+                <group expand="1" string="Group By">
+                    <filter string="Job" name="analytic_account_id" context="{'group_by':'analytic_account_id'}" groups="analytic.group_analytic_accounting" />
+                    <filter string="Product" name="product" context="{'group_by':'product_id','residual_invisible':True}"/>
+                    <filter string="Product Category" name="category_product" context="{'group_by':'categ_id','residual_invisible':True}"/>
+                    <filter string="Salesperson" name='user' context="{'group_by':'user_id'}"/>
+                    <filter string="Project Manager" name='pm' context="{'group_by':'project_manager'}"/>
+                    <filter string="Partner" name="partner_id" context="{'group_by':'partner_id','residual_visible':True}"/>
+                    <filter string="Analytic Group" name="aa_group_id" context="{'group_by':'aa_group_id'}" groups="analytic.group_analytic_accounting" />
+                    <!-- separator orientation="vertical" />
+                    <filter string="Date" name="date" context="{'group_by':'date'}"/ -->
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_gross_margin_report" model="ir.actions.act_window">
+        <field name="name">Gross Margin Analysis</field>
+        <field name="res_model">gross.margin.report</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">pivot,graph,tree</field>
+        <!-- field name="context">{'search_default_current':1, 'search_default_customer':1, 'group_by':[], 'group_by_no_leaf':1, 'search_default_year': 1}</field -->
+        <field name="search_view_id" ref="view_gross_margin_report_search"/>
+        <field name="help">From this report, you can have an overview of the gross magin on your invoices.</field>
+    </record>
+
+    <menuitem name="Gross Margin" action="action_gross_margin_report" id="menu_action_gross_margin_report" parent="account.account_reports_management_menu" sequence="1"/>
+
+</data>
+</odoo>

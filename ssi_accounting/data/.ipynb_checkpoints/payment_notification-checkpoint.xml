@@ -6,7 +6,7 @@
             <field name="name">ACH Payment Notify: Send by email</field>
             <field name="model_id" ref="account_payment_order.model_bank_payment_line"/>
             <field name="subject">${object.company_id.name} ACH Notification (Ref ${object.name or 'n/a' })</field>
-            <field name="email_from">${user.email|safe}</field>
+            <field name="email_from">acctspay@rsaworks.com</field>
             <field name="email_to">${object.partner_id.ach_email|safe}, ${(object.partner_id.ach_email_alt|safe if object.partner_id.ach_email_alt)}</field>
             <field name="body_html" type="xml">
                 
