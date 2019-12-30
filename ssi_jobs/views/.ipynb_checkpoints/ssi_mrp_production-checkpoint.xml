@@ -141,6 +141,18 @@
           </field>
       </record>
         
+      <record model="ir.ui.view" id="ssi_mrp_workcenter_kanban">
+          <field name="name">ssi_mrp_workcenter_kanban</field>
+          <field name="model">mrp.workcenter</field>
+          <field name="inherit_id" ref="mrp.mrp_workcenter_kanban"/>
+          <field name="type">kanban</field>
+          <field name="arch" type="xml">
+            <xpath expr="//button[hasclass('btn', 'btn-primary')]" position="attributes">
+                <attribute name="name">401</attribute>
+            </xpath>
+          </field>
+      </record>
+        
         <record id="ssi_mrp_workorder_search_inherit" model="ir.ui.view">
             <field name="name">ssi.mrp_workorder_search_inherit</field>
             <field name="model">mrp.workorder</field>

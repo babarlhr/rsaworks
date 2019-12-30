@@ -19,12 +19,12 @@
                         <page string="ASHER">
                             <group>
                                 <group string="Focus - Elite Salespeople Focus on a Few Top Prospects">
-                                    <field name="l_prospect_fits_our_ideal_customer_group"/>
-                                    <field name="l_prospect_has_critical_or_urgent_need"/>
-                                    <field name="l_we_have_solution_to_satisfy_the_need"/>
-                                    <field name="l_we_have_a_coach_in_or_close_to_company"/>
-                                    <field name="l_solving_this_need_is_in_their_budget"/>
-                                    <field name="l_revenues_and_margins_are_sufficient"/>
+                                    <field name="o_prospect_fits_our_ideal_customer_group"/>
+                                    <field name="o_prospect_has_critical_or_urgent_need"/>
+                                    <field name="o_we_have_solution_to_satisfy_the_need"/>
+                                    <field name="o_we_have_a_coach_in_or_close_to_company"/>
+                                    <field name="o_solving_this_need_is_in_their_budget"/>
+                                    <field name="o_revenues_and_margins_are_sufficient"/>
                                 </group>
                                 <group string="Research - Elite Salespeople Know Their Prospects And Business">
                                     <field name="l_annual_revenue"/>
@@ -41,9 +41,9 @@
                                 </group>
                             </group>
                             <group  string="Coaches and Personalities - Elite Salespeople Leverage 80/20 Rules">
-                                <field name="l_this_prospect_will_be_our_coach"/>
-                                <field name="l_personality_type"/>
-                                <field name="l_personality_type_matched_mirrored"/>
+                                <field name="o_this_prospect_will_be_our_coach"/>
+                                <field name="o_personality_type"/>
+                                <field name="o_personality_type_matched_mirrored"/>
                             </group>
                         </page>
                     <!-- </notebook> -->

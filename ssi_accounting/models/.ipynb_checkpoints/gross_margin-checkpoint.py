@@ -4,9 +4,10 @@
 import time
 import json
 from odoo import api, models, _
-from odoo.tools.misc import formatLang
+from odoo.tools.misc import formatLang, format_date
 from odoo.exceptions import UserError
 from odoo.addons.web.controllers.main import clean_action
+from datetime import datetime, timedelta
 
 
 class ReportGrossMargin(models.AbstractModel):
@@ -42,6 +43,7 @@ class ReportGrossMargin(models.AbstractModel):
                     {'name': _('Account Manager')},
                     {'name': _('Invoice')},
                     {'name': _('Job')},
+                    {'name': _('Job Type')},
                     {'name': _('Revenue'), 'class': 'number'},
                     {'name': _('COGS'), 'class': 'number'},
                     {'name': _('GM $$'), 'class': 'number'},
@@ -53,6 +55,7 @@ class ReportGrossMargin(models.AbstractModel):
                     {'name': _('Project Manager')},
                     {'name': _('Account Manager')},
                     {'name': _('Job #')},
+                    {'name': _('Job Type')},
                     {'name': _('Sales Order #')},
                     {'name': _('Invoice #')},
                     {'name': _('Invoice Date')},
@@ -139,14 +142,16 @@ class ReportGrossMargin(models.AbstractModel):
                 sum(\"account_move_line\".debit) FILTER (WHERE ac.group_id = 2) AS rev_debit, 
                 sum(\"account_move_line\".credit) FILTER (WHERE ac.group_id = 2) AS rev_credit,
                 \"account_move_line\".analytic_account_id AS aa_id, 
-                p.customer_category, p.id as partner_id, aa.name as job_name,
+                p.customer_category, p.id as partner_id, aa.name as job_name, j.type as job_type,
                 p.ref, am.ref as am_ref FROM """+tables+"""
                 LEFT JOIN res_partner p ON \"account_move_line\".partner_id = p.id
                 LEFT JOIN account_account ac on \"account_move_line\".account_id = ac.id
                 LEFT JOIN account_move am on \"account_move_line\".move_id = am.id
                 LEFT JOIN account_analytic_account aa on \"account_move_line\".analytic_account_id = aa.id
+                LEFT JOIN ssi_jobs j on aa.ssi_job_id = j.id
                 WHERE am.ref IS NOT NULL AND ac.group_id IN (2, 3) """+where_clause+"""
-                GROUP BY aa_id, p.ref, p.id, p.customer_category, job_name, am_ref ORDER BY job_name
+                GROUP BY \"account_move_line\".analytic_account_id, p.ref, p.id, p.customer_category, job_name, am_ref, job_type 
+                ORDER BY job_name
         """
 
         params = where_params
@@ -206,6 +211,7 @@ class ReportGrossMargin(models.AbstractModel):
                                     {'name': invoice.user_id.name},
                                     {'name': amref},
                                     {'name': line.get('job_name')},
+                                    {'name': line.get('job_type')},
                                     {'name': self.format_value(line_r)},
                                     {'name': self.format_value(line_c)},
                                     {'name': self.format_value(line_b)},
@@ -327,7 +333,7 @@ class ReportGrossMargin(models.AbstractModel):
                 sum(\"account_move_line\".debit) FILTER (WHERE pc.profit_center = 'Training' and ac.group_id = 2) as t_rev_debit,
                 sum(\"account_move_line\".credit) FILTER (WHERE pc.profit_center = 'Training' and ac.group_id = 2) as t_rev_credit,
                 \"account_move_line\".analytic_account_id AS aa_id, 
-                p.customer_category, p.id as partner_id, p.ref, aa.name as job_name, am.ref as am_ref
+                p.customer_category, p.id as partner_id, p.ref, aa.name as job_name, j.type as job_type, am.ref as am_ref
                 FROM """+tables+"""
                 LEFT JOIN res_partner p ON \"account_move_line\".partner_id = p.id
                 LEFT JOIN account_account ac on \"account_move_line\".account_id = ac.id
@@ -336,8 +342,10 @@ class ReportGrossMargin(models.AbstractModel):
                 LEFT JOIN product_product pp on \"account_move_line\".product_id = pp.id
                 LEFT JOIN product_template pt on pp.product_tmpl_id = pt.id
                 LEFT JOIN product_category pc on pt.categ_id = pc.id
+                LEFT JOIN ssi_jobs j on aa.ssi_job_id = j.id
                 WHERE am.ref IS NOT NULL AND ac.group_id IN (2, 3) """+where_clause+"""
-                GROUP BY aa_id, p.id, p.customer_category, p.ref, job_name, am_ref ORDER BY job_name
+                GROUP BY \"account_move_line\".analytic_account_id, p.id, p.customer_category, p.ref, job_name, job_type, am_ref 
+                ORDER BY job_name
         """
         params = where_params
         self.env.cr.execute(sql_query, params)
@@ -437,9 +445,10 @@ class ReportGrossMargin(models.AbstractModel):
                                     {'name': invoice.project_manager.name}, 
                                     {'name': invoice.user_id.name},
                                     {'name': line.get('job_name')},
+                                    {'name': line.get('job_type')},
                                     {'name': invoice.origin},
                                     {'name': invoice.move_id.name},
-                                    {'name': invoice.date_invoice},
+                                    {'name': format_date(self.env, invoice.date_invoice)},
                                     {'name': d_line_r},
                                     {'name': d_line_c},
                                     {'name': d_line_b},
@@ -514,6 +523,42 @@ class ReportGrossMargin(models.AbstractModel):
                 'columns': [{'name': v} for v in [
                         '', 
                         '',
+                        '', 
+                        '', 
+                        '', 
+                        '', 
+                        '',
+                        '', 
+                        '', 
+                        '', 
+                        '', 
+                        '',
+                        '', 
+                        '', 
+                        '', 
+                        '', 
+                        '',
+                        '', 
+                        '', 
+                        '', 
+                        '', 
+                        '',
+                        '', 
+                        '', 
+                        '', 
+                        '', 
+                        '',
+                        '', 
+                        '', 
+                        '', 
+                        '', 
+                        '',
+                        '', 
+                        '', 
+                        '', 
+                        '', 
+                        '',
+                        '', 
                         '', 
                         '', 
                         '', 

@@ -11,8 +11,7 @@ class Jobs(models.Model):
     _order = "create_date,display_name desc"
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    so_ids = fields.One2many(
-        'sale.order', 'ssi_job_id', string='SO')
+    so_ids = fields.One2many('sale.order', 'ssi_job_id', string='SO')
     order_total = fields.Monetary(
         string='Order Total', track_visibility='always', related='so_ids.amount_total')
 #     po_count = fields.Integer(string='Purchase Order', compute='_get_po_count')
@@ -32,6 +31,7 @@ class Jobs(models.Model):
     partner_id = fields.Many2one(
         'res.partner', string='Customer', ondelete='restrict', required=True,
         domain=[('parent_id', '=', False)])
+    opportunity_id = fields.Many2one('crm.lead', string='Oppurtunity', domain="[('type', '=', 'opportunity')]")
     user_id = fields.Many2one('res.users', related='partner_id.user_id', string='Salesperson')
     project_manager = fields.Many2one('res.users', related='partner_id.project_manager_id', string='Project Manager', store=True)
     active = fields.Boolean(default=True)
@@ -40,7 +40,10 @@ class Jobs(models.Model):
     deadline_date = fields.Datetime(string='Customer Deadline')
 #     ready_for_pickup = fields.Datetime(string='Ready for Pickup')
     type = fields.Selection(
-        [('Shop', 'Shop'), ('Field Service', 'Field Service')], string='Job Type', default='Shop')
+        [('Shop', 'Shop'), 
+         ('Field Service', 'Field Service'), 
+         ('Inspection Fee', 'Inspection Fee')], 
+        string='Job Type', default='Shop')
     urgency = fields.Selection(
         [('straight', 'Straight time'), ('straight_quote', 'Straight time quote before repair'), ('overtime', 'Overtime'), ('overtime_quote', 'Overtime quote before repair')], string='Urgency')
     po_number = fields.Char(string='PO Number')

@@ -54,7 +54,7 @@
                 <group name="main">
                     <group name="left">
                         <field name="name"/>
-                        <field name="partner_id" widget="res_partner_many2one" domain="[('customer','=',True)]" context="{'search_default_customer':1, 'show_address': 1}" options="{&quot;always_reload&quot;: True}"/>
+                        <field name="partner_id" widget="res_partner_many2one" domain="[('customer','=',True)]" context="{'search_default_customer':1, 'show_address': 1}" options="{'always_reload': True, 'no_create': True, 'no_create_edit': True}"/>
                         <!-- <field name="objects"/> -->
                         <!-- <field name="size"/>
                         <field name="sizeUM"/>
@@ -62,6 +62,7 @@
                         <field name="dimensions"/> -->
                         <field name="equipment_id" context="{'customer_id': partner_id}" domain="[('customer_id', '=', partner_id)]"/>
                         <field name="deadline_date"/>
+                        <field name="opportunity_id" attrs="{'readonly': [('stage_id', '&gt;', 1)]}"/>
                         <field name="hide_in_kiosk" attrs="{'readonly': [('stage_id', '=', 15)]}"/>
                     </group>
                     <group name="right">

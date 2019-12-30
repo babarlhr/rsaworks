@@ -3,17 +3,55 @@
 <odoo>
     <data>
 
+    <record id="crm_action_job_new" model="ir.actions.act_window">
+        <field name="name">Jobs</field>
+        <field name="res_model">ssi_jobs</field>
+        <field name="view_mode">form,tree,graph</field>
+        <field name="domain">[('opportunity_id', '=', active_id)]</field>
+        <field name="context">{'search_default_opportunity_id': active_id, 'default_opportunity_id': active_id}</field>
+    </record>
+
+    <record id="crm_action_job" model="ir.actions.act_window">
+        <field name="name">Jobs</field>
+        <field name="res_model">ssi_jobs</field>
+        <field name="view_mode">tree,form,graph</field>
+        <field name="domain">[('opportunity_id', '=', active_id)]</field>
+        <field name="context">{'search_default_opportunity_id': active_id, 'default_opportunity_id': active_id}</field>
+    </record>
+
       <record model="ir.ui.view" id="ssi_crm_lead_form">
           <field name="name">ssi_crm_lead_form</field>
           <field name="model">crm.lead</field>
           <field name="inherit_id" ref="crm.crm_case_form_view_oppor"/>
           <field name="type">form</field>
           <field name="arch" type="xml">
+              <xpath expr="//field[@name='date_deadline']" position="after">
+                  <field name="ssi_job_id" readonly="1"/>
+                  <field name="job_stage" attrs="{'invisible': [['ssi_job_id','=',False]]}"/>
+                  <field name="job_deadline" attrs="{'invisible': [['ssi_job_id','=',False]]}"/>
+              </xpath>
               <xpath expr="//field[@name='user_id']" position="after">
                   <field name="project_manager"/>
               </xpath>
+              <xpath expr="//button[@name='761']" position="after">
+                    <button string="New Job" name="%(crm_action_job_new)d" type="action" class="oe_highlight" attrs="{'invisible': ['&amp;', ('probability', '=', 0), ('active', '=', False)]}" context="{'search_default_partner_id': partner_id, 'default_partner_id': partner_id}"/>
+              </xpath>
+              <xpath expr="//button[@name='798']" position="after">
+                    <button class="oe_stat_button" type="action"
+                            name="%(crm_action_job)d" icon="fa-briefcase"
+                            context="{'default_partner_id': partner_id, 'search_default_draft': 1, 'search_default_sent': 1}">
+                        <div class="o_stat_info">
+                            <field name="job_number" class="o_stat_value"/>
+                            <span class="o_stat_text"> Job(s) </span>
+                        </div>
+                    </button>
+              </xpath>
+              <xpath expr="//button[@name='796']" position="replace">
+                    <button string="New Quotation" name="796" type="action" class="oe_highlight" attrs="{'invisible': ['&amp;', ('probability', '=', 0), ('active', '=', False)]}" context="{'search_default_partner_id': partner_id, 'default_partner_id': partner_id, 'default_team_id': team_id, 'default_campaign_id': campaign_id, 'default_medium_id': medium_id, 'default_origin': name, 'default_source_id': source_id, 'default_ssi_job_id': ssi_job_id}"/>
+              </xpath>
           </field>
       </record>
+
 
     </data>
 </odoo>

@@ -7,6 +7,10 @@ class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
     hide_on_print = fields.Boolean('Do Not Print', default=False)
+    hs_code = fields.Char(
+        string="HS Code",
+        help="Standardized code for international shipping and goods declaration. At the moment, only used for the FedEx shipping provider.",
+    )
 
 class ProductCategory(models.Model):
     _inherit = "product.category"

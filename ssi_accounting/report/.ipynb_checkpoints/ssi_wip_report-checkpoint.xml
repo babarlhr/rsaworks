@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+    <record id="view_wip_report_pivot" model="ir.ui.view">
+         <field name="name">wip.report.pivot</field>
+         <field name="model">wip.report</field>
+         <field name="arch" type="xml">
+             <pivot string="WIP Analysis" disable_linking="True">
+                 <field name="account_id" type="row"/>
+                 <field name="workcenter_id" type="row"/>
+                 <field name="general_account_id" type="col"/>
+                 <field name="amount" type="measure"/>
+             </pivot>
+         </field>
+    </record>
+
+    <record id="view_wip_report_graph" model="ir.ui.view">
+         <field name="name">wip.report.graph</field>
+         <field name="model">wip.report</field>
+         <field name="arch" type="xml">
+             <graph string="WIP Analysis">
+                 <field name="general_account_id"/>
+                 <field name="amount" type="measure"/>
+             </graph>
+         </field>
+    </record>
+
+    <!-- Custom reports (aka filters) -->
+    <record id="filter_wip_report_salespersons" model="ir.filters">
+        <field name="name">By Salespersons</field>
+        <field name="model_id">wip.report</field>
+        <field name="domain">[]</field>
+        <field name="user_id" eval="False"/>
+        <field name="context">{'group_by': ['date:month', 'user_id']}</field>
+    </record>
+    <record id="filter_wip_product" model="ir.filters">
+        <field name="name">By Product</field>
+        <field name="model_id">wip.report</field>
+        <field name="domain">[]</field>
+        <field name="context">{'group_by': ['date:month', 'product_id'], 'set_visible':True, 'residual_invisible':True}</field>
+    </record>
+    <record id="filter_wip_product_category" model="ir.filters">
+        <field name="name">By Product Category</field>
+        <field name="model_id">wip.report</field>
+        <field name="domain">[]</field>
+        <field name="user_id" eval="False"/>
+        <field name="context">{'group_by': ['date:month', 'categ_id'], 'residual_invisible':True}</field>
+    </record>
+
+    <record id="view_wip_report_search" model="ir.ui.view">
+        <field name="name">wip.report.search</field>
+        <field name="model">wip.report</field>
+        <field name="arch" type="xml">
+            <search string="WIP Analysis">
+                <separator/>
+                <field name="partner_id" operator="child_of"/>
+                <field name="user_id" />
+                <field name="product_id" />
+                <field name="categ_id" filter_domain="[('categ_id', 'child_of', self)]"/>
+                <group expand="1" string="Group By">
+                    <filter string="Job" name="account_id" context="{'group_by':'account_id'}" groups="analytic.group_analytic_accounting" />
+                    <filter string="Product" name="product" context="{'group_by':'product_id','residual_invisible':True}"/>
+                    <filter string="Product Category" name="category_product" context="{'group_by':'categ_id','residual_invisible':True}"/>
+                    <filter string="Salesperson" name='user' context="{'group_by':'user_id'}"/>
+                    <filter string="Project Manager" name='pm' context="{'group_by':'project_manager'}"/>
+                    <filter string="Partner" name="partner_id" context="{'group_by':'partner_id','residual_visible':True}"/>
+                    <filter string="Analytic Group" name="group_id" context="{'group_by':'group_id'}" groups="analytic.group_analytic_accounting" />
+                    <!-- separator orientation="vertical" />
+                    <filter string="Date" name="date" context="{'group_by':'date'}"/ -->
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_wip_report" model="ir.actions.act_window">
+        <field name="name">WIP Analysis</field>
+        <field name="res_model">wip.report</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">pivot,graph,tree</field>
+        <!-- field name="context">{'search_default_current':1, 'search_default_customer':1, 'group_by':[], 'group_by_no_leaf':1, 'search_default_year': 1}</field -->
+        <field name="search_view_id" ref="view_wip_report_search"/>
+        <field name="help">From this report, you can have an overview of the wip accounts.</field>
+    </record>
+
+    <menuitem name="WIP Analysis" action="action_wip_report" id="menu_action_wip_report" parent="account.account_reports_management_menu" sequence="2"/>
+
+</data>
+</odoo>
