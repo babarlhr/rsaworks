@@ -15,9 +15,16 @@ class AccountInvoice(models.Model):
     @api.model
     def create(self, vals):
         if vals.get('origin'):
-            so = self.env['sale.order'].search([('name', '=', vals.get('origin'))])
-            vals['project_manager'] = so.project_manager.id
-            vals['customer_category'] = so.customer_category
+            if 'SUB' in vals.get('origin'):
+                lines = vals.get('invoice_line_ids')
+                sub_id = lines[0][2]['subscription_id']
+                ss = self.env['sale.subscription'].search([('id', '=', sub_id)])
+                vals['project_manager'] = ss.project_manager.id
+                vals['customer_category'] = ss.customer_category
+            else:
+                so = self.env['sale.order'].search([('name', '=', vals.get('origin'))])
+                vals['project_manager'] = so.project_manager.id
+                vals['customer_category'] = so.customer_category
         res = super(AccountInvoice, self).create(vals)
         return res
 

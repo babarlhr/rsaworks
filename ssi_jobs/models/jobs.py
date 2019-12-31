@@ -31,7 +31,7 @@ class Jobs(models.Model):
     partner_id = fields.Many2one(
         'res.partner', string='Customer', ondelete='restrict', required=True,
         domain=[('parent_id', '=', False)])
-    opportunity_id = fields.Many2one('crm.lead', string='Oppurtunity', domain="[('type', '=', 'opportunity')]")
+    opportunity_id = fields.Many2one('crm.lead', string='Opportunity', domain="[('type', '=', 'opportunity')]")
     user_id = fields.Many2one('res.users', related='partner_id.user_id', string='Salesperson')
     project_manager = fields.Many2one('res.users', related='partner_id.project_manager_id', string='Project Manager', store=True)
     active = fields.Boolean(default=True)

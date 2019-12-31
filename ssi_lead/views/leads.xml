@@ -117,6 +117,7 @@
                 </xpath>
                 <xpath expr="//field[@name='user_id']" position="after">
                     <field name="project_manager"/>
+                    <field name="customer_category"/>
                 </xpath>
             </field>
         </record>

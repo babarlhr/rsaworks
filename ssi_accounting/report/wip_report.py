@@ -32,6 +32,8 @@ class GrossMarginReport(models.Model):
 
     project_manager = fields.Many2one('res.users', string='Project Manager', readonly=True)
     categ_id = fields.Many2one('product.category', string='Product Category', readonly=True)
+    profit_center = fields.Char(string='Profit Center', readonly=True)
+    customer_cat = fields.Char(string='Customer Category', readonly=True)
 
     def _select(self):
         select_str = """
@@ -39,7 +41,7 @@ class GrossMarginReport(models.Model):
                     aal.amount AS amount, aal.unit_amount AS unit_amount, aal.code AS code, aal.workcenter_id AS workcenter_id,
                     aal.currency_id AS currency_id, aal.company_id AS company_id, aal.account_id AS account_id,
                     aal.move_id AS move_id, aal.ref as ref, aal.date AS date, aal.partner_id AS partner_id, aal.user_id AS user_id, 
-                    pt.categ_id AS categ_id, rp.project_manager_id AS project_manager, aal.group_id AS group_id
+                    pt.categ_id AS categ_id, pc.profit_center as profit_center, rp.project_manager_id AS project_manager, aal.group_id AS group_id
         """
         return select_str
 
@@ -48,6 +50,7 @@ class GrossMarginReport(models.Model):
                 FROM account_analytic_line aal
                 LEFT JOIN product_product pp on aal.product_id = pp.id
                 LEFT JOIN product_template pt on pp.product_tmpl_id = pp.id
+                LEFT JOIN product_category pc on pt.categ_id = pc.id
                 LEFT JOIN res_partner rp on aal.partner_id = rp.id
         """
         return from_str

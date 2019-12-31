@@ -14,7 +14,7 @@ class SaleOrder(models.Model):
     job_stage = fields.Char(compute='_get_job_stage', string='Job Stage', readonly=True)
     project_manager = fields.Many2one('res.users', string='Project Manager')
     customer_category = fields.Selection(
-        [('Top Account', 'Top Account'), ('Key Account', 'Key Account'), ('Account', 'Account'), ('New Account', 'New Account')], string='Customer Category')
+        [('Top Account', 'Top Account'), ('Key Account', 'Key Account'), ('Account', 'Account'), ('House Account', 'House Account'), ('New Account', 'New Account')], string='Customer Category')
     
     @api.onchange('ssi_job_id')
     def _onchange_ssi_job_id(self):
@@ -31,10 +31,16 @@ class SaleOrder(models.Model):
     @api.onchange('partner_id')
     def _onchange_partner_pm(self):
         # When updating partner, auto set project manager.
-        if self.partner_id.project_manager_id:
-            self.project_manager = self.partner_id.project_manager_id.id
-        if self.partner_id.customer_category:
-            self.customer_category = self.partner_id.customer_category
+        if not self.opportunity_id:
+            if self.partner_id.project_manager_id:
+                self.project_manager = self.partner_id.project_manager_id.id
+            if self.partner_id.customer_category:
+                self.customer_category = self.partner_id.customer_category
+        else:
+            if self.opportunity_id.project_manager:
+                self.project_manager = self.opportunity_id.project_manager.id
+            if self.opportunity_id.customer_category:
+                self.customer_category = self.opportunity_id.customer_category
 
     @api.depends('state', 'order_line.invoice_status', 'order_line.invoice_lines')
     def _get_invoiced(self):

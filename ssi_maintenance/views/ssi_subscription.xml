@@ -36,6 +36,7 @@
           </xpath>	
           <xpath expr="//field[@name='user_id']" position="after">	
             <field name="project_manager"/>	
+            <field name="customer_category"/>	
           </xpath>	
           <xpath expr="//field[@name='product_id']" position="attributes">	
             <attribute name="options">{'no_create': True, 'no_create_edit': True}</attribute>	

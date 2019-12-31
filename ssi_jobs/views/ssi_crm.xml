@@ -44,7 +44,7 @@
                     </button>
               </xpath>
               <xpath expr="//button[@name='796']" position="replace">
-                    <button string="New Quotation" name="796" type="action" class="oe_highlight" attrs="{'invisible': ['&amp;', ('probability', '=', 0), ('active', '=', False)]}" context="{'search_default_partner_id': partner_id, 'default_partner_id': partner_id, 'default_team_id': team_id, 'default_campaign_id': campaign_id, 'default_medium_id': medium_id, 'default_origin': name, 'default_source_id': source_id, 'default_ssi_job_id': ssi_job_id}"/>
+                    <button string="New Quotation" name="796" type="action" class="oe_highlight" attrs="{'invisible': ['&amp;', ('probability', '=', 0), ('active', '=', False)]}" context="{'search_default_partner_id': partner_id, 'default_partner_id': partner_id, 'default_team_id': team_id, 'default_campaign_id': campaign_id, 'default_medium_id': medium_id, 'default_origin': name, 'default_source_id': source_id, 'default_ssi_job_id': ssi_job_id, 'default_customer_category': customer_category}"/>
               </xpath>
           </field>
       </record>

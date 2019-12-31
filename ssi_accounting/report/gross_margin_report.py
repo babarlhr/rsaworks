@@ -71,6 +71,8 @@ class GrossMarginReport(models.Model):
     user_id = fields.Many2one('res.users', string='Salesperson', readonly=True)
     project_manager = fields.Many2one('res.users', string='Project Manager', readonly=True)
     categ_id = fields.Many2one('product.category', string='Product Category', readonly=True)
+    profit_center = fields.Char(string='Profit Center', readonly=True)
+    customer_cat = fields.Char(string='Customer Category', readonly=True)
     aa_group_id = fields.Many2one('account.analytic.group', string='Analytic Group', readonly=True)
 
     def _select(self):
@@ -83,8 +85,8 @@ class GrossMarginReport(models.Model):
                     aml.move_id AS move_id, aml.ref as ref, aml.payment_id AS payment_id, aml.reconciled AS reconciled, aml.full_reconcile_id AS full_reconcile_id, 
                     aml.journal_id AS journal_id, aml.blocked AS blocked, aml.date_maturity AS date_maturity, aml.date AS date, 
                     aml.tax_line_id AS tax_line_id, aml.analytic_account_id AS analytic_account_id, aml.company_id AS company_id, 
-                    aml.partner_id AS partner_id, aml.user_type_id AS user_type_id, aml.tax_exigible AS tax_exigible, 
-                    pt.categ_id AS categ_id, rp.user_id AS user_id, rp.project_manager_id AS project_manager, aaa.group_id AS aa_group_id
+                    aml.partner_id AS partner_id, aml.user_type_id AS user_type_id, aml.tax_exigible AS tax_exigible, ai.customer_category as customer_cat, 
+                    pt.categ_id AS categ_id, pc.profit_center as profit_center, rp.user_id AS user_id, rp.project_manager_id AS project_manager, aaa.group_id AS aa_group_id
         """
         return select_str
 
@@ -92,16 +94,18 @@ class GrossMarginReport(models.Model):
         from_str = """
                 FROM account_move_line aml
                 JOIN account_move am on aml.move_id = am.id
+                LEFT JOIN account_invoice ai on ai.move_id = am.id
                 LEFT JOIN account_analytic_account aaa on aml.analytic_account_id = aaa.id
                 LEFT JOIN product_product pp on aml.product_id = pp.id
                 LEFT JOIN product_template pt on pp.product_tmpl_id = pt.id
+                LEFT JOIN product_category pc on pt.categ_id = pc.id
                 LEFT JOIN res_partner rp on aml.partner_id = rp.id
         """
         return from_str
 
     def _group_by(self):
         group_by_str = """
-                GROUP BY aml.id, aml.product_id, aml.account_analytic_id, aml.date
+                GROUP BY aml.id, aml.product_id, aml.account_analytic_id, aml.date, profit_center
         """
         return group_by_str
 

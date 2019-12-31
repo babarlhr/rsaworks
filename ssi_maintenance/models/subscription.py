@@ -13,9 +13,20 @@ class SaleSubscription(models.Model):
     storage_id = fields.One2many('storage', 'subscription_id', string='Storage')
     square_foot_total = fields.Float(string='Square Foot Total', compute='_get_sqf_total')
     last_invoice_date = fields.Date(string='Last Invoiced Date', compute='_get_last_invoice')
-    project_manager = fields.Many2one('res.users', related='partner_id.project_manager_id', string='Project Manager', store=True)
+    project_manager = fields.Many2one('res.users', string='Project Manager')
+#     project_manager = fields.Many2one('res.users', related='partner_id.project_manager_id', string='Project Manager', store=True)
+    customer_category = fields.Selection(
+        [('Top Account', 'Top Account'), ('Key Account', 'Key Account'), ('Account', 'Account'), ('House Account', 'House Account'), ('New Account', 'New Account')], string='Customer Category')
 
     # ACTIONS AND METHODS
+    @api.onchange('partner_id')
+    def _onchange_partner_pm(self):
+        # When updating partner, auto set project manager.
+        if self.partner_id.project_manager_id:
+            self.project_manager = self.partner_id.project_manager_id.id
+        if self.partner_id.customer_category:
+            self.customer_category = self.partner_id.customer_category
+
     def recurring_invoice(self):
         self.ssi_update_lines()
         self._recurring_create_invoice()
