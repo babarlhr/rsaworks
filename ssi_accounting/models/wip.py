@@ -8,6 +8,7 @@ from odoo.tools.misc import formatLang, format_date
 from odoo.exceptions import UserError
 from odoo.addons.web.controllers.main import clean_action
 from datetime import datetime, timedelta
+from pytz import timezone, UTC
 
 
 class ReportWip(models.AbstractModel):
@@ -18,6 +19,7 @@ class ReportWip(models.AbstractModel):
 #     filter_date = {'date_from': '', 'date_to': '', 'filter': 'this_month'}
 #     filter_unfold_all = True
 #     filter_partner = True
+    filter_date = {'date_from': '', 'filter': 'this_month'}
     filter_analytic = True
 
 #     def _get_super_columns(self, options):
@@ -58,21 +60,31 @@ class ReportWip(models.AbstractModel):
                     {'name': _('Customer PO Number')},
                     {'name': _('Job Type')},
                     {'name': _('Job Desc')},
+                    {'name': _('Urgency')},
                     {'name': _('Customer Cat')},
                     {'name': _('Project Manager')},
                     {'name': _('Account Manager')},
                     {'name': _('Order')},
+                    {'name': _('Confirmation Date')},
+                    {'name': _('Estimate Amount')},
                     {'name': _('Invoice')},
                     {'name': _('Opened Date')},
                     {'name': _('Customer Deadline')},
                     {'name': _('Delivery Date')},
                     {'name': _('Est. Hours'), 'class': 'number'},
-                    {'name': _('Real Hours'), 'class': 'number'},
+                    {'name': _('Actual Hours'), 'class': 'number'},
                     {'name': _('Lab'), 'class': 'number'},
 #                     {'name': _('Lab Burden'), 'class': 'number'},
                     {'name': _('Mat'), 'class': 'number'},
                     {'name': _('ACS Lab'), 'class': 'number'},
-                    {'name': _('ACS Mat'), 'class': 'number'}
+                    {'name': _('ACS Mat'), 'class': 'number'},
+                    {'name': _('Rating')},
+                    {'name': _('Poles')},
+                    {'name': _('Voltage')},
+                    {'name': _('Mounting')},
+                    {'name': _('Manufacturer')},
+                    {'name': _('First Labor Date')},
+                    {'name': _('Last Labor Date')}
             ]
 
     @api.model
@@ -331,6 +343,11 @@ class ReportWip(models.AbstractModel):
 #                 sum(\"account_move_line\".credit) FILTER (WHERE ac.group_id = 4 and \"account_move_line\".ref LIKE '%%Labor%%') AS lab_credit,
 #                 sum(\"account_move_line\".debit) FILTER (WHERE ac.group_id = 4 and \"account_move_line\".ref LIKE '%%Burden%%') AS lab_b_debit, 
 #                 sum(\"account_move_line\".credit) FILTER (WHERE ac.group_id = 4 and \"account_move_line\".ref LIKE '%%Burden%%') AS lab_b_credit,
+#         date_from = options['date']['date_from']
+        date_from = datetime.strptime(options['date']['date_from'], '%Y-%m-%d')
+        date_to = datetime.strptime(options['date']['date_to'], '%Y-%m-%d')
+        date_to = date_to + timedelta(days=1)
+#         date_to = options['date']['date_to']
         sql_query = """
             SELECT sum(\"account_move_line\".balance)*-1 AS balance, 
                 sum(\"account_move_line\".debit) FILTER (WHERE ac.group_id = 4) AS lab_debit, 
@@ -344,16 +361,15 @@ class ReportWip(models.AbstractModel):
                 (SELECT coalesce(sum(duration_expected), 0) from mrp_workorder where ssi_job_id = j.id) AS exp_mins,
                 (SELECT coalesce(sum(duration), 0) from mrp_workorder where ssi_job_id = j.id) AS real_mins,
                 \"account_move_line\".analytic_account_id AS aa_id, 
-                p.customer_category, p.id as partner_id, j.name as job_name, j.type as job_type, j.notes, 
-                j.po_number as po, j.create_date, j.deadline_date, j.completed_on FROM """+tables+"""
+                p.customer_category, p.id as partner_id, j.name as job_name, j.type as job_type, j.notes, j.urgency, j.equipment_id,
+                j.po_number as po, j.create_date, j.deadline_date, j.completed_on, j.id as job_id, p.ref FROM """+tables+"""
                 LEFT JOIN res_partner p ON \"account_move_line\".partner_id = p.id
                 LEFT JOIN account_account ac on \"account_move_line\".account_id = ac.id
                 LEFT JOIN account_move am on \"account_move_line\".move_id = am.id
                 LEFT JOIN account_analytic_account aa on \"account_move_line\".analytic_account_id = aa.id
                 LEFT JOIN ssi_jobs j on aa.ssi_job_id = j.id
-                LEFT JOIN mrp_workorder wo on aa.ssi_job_id = wo.ssi_job_id
                 WHERE \"account_move_line\".analytic_account_id IS NOT NULL AND ac.group_id IN (4, 5, 6, 7) """+where_clause+"""
-                GROUP BY \"account_move_line\".analytic_account_id, p.id, p.customer_category, job_name, job_type, po, j.id, j.create_date, j.deadline_date, j.completed_on, j.notes
+                GROUP BY \"account_move_line\".analytic_account_id, p.id, p.customer_category, p.ref, job_name, job_type, po, j.id, j.create_date, j.deadline_date, j.completed_on, j.notes, j.urgency, j.equipment_id
                 ORDER BY job_name
         """
 
@@ -410,7 +426,32 @@ class ReportWip(models.AbstractModel):
 #             if line.get('job_name') != next_job or not line.get('job_name'):
             if True:
                 ++count
+                equip = self.env['maintenance.equipment'].search([('id', '=', line.get('equipment_id'))], limit=1)
                 order = self.env['sale.order'].search([('analytic_account_id', '=', line.get('aa_id'))], limit=1)
+                # Get Delivery Date
+                delivery_date = ''
+                if order.picking_ids:
+                    for transfer in (order.picking_ids).filtered(lambda t: t.picking_type_id.id == 2):
+                        delivery_date = transfer.date_done
+
+                # Get Labor Dates
+                wos = self.env['mrp.workorder'].search([('ssi_job_id', '=', line.get('job_id'))])
+                times = []
+                first = datetime(2100, 1, 1)
+                last = datetime(1978, 1, 1)
+                for wo in wos:
+                    times = (wo.time_ids).sorted(key=lambda r: r.date_end)
+#                     times = (wo.time_ids).filtered(lambda t: t.date_end <= date_to).sorted(key=lambda r: r.date_end)
+                    if times:
+                        if times[0].date_end <= first: 
+                            first = times[0].date_end
+                        if times[-1].date_end >= last:
+                            last = times[-1].date_end
+                rating = ''
+                if equip.rating and not equip.rating_unit:
+                    rating = str(equip.rating)
+                elif equip.rating and equip.rating_unit:
+                    rating = str(equip.rating) + ' ' + equip.rating_unit
                 id = line.get('aa_id')
                 if order.invoice_ids:
                     amref = order.invoice_ids[0].name
@@ -419,32 +460,49 @@ class ReportWip(models.AbstractModel):
                 browsed_partner = self.env['res.partner'].browse(line.get('partner_id'))
                 partner_name = browsed_partner.parent_id.name and str(browsed_partner.parent_id.name) + ', ' + browsed_partner.name or browsed_partner.name
                 if (round(line_l) + round(line_m) + round(line_l_a) + round(line_m_a)) > 0:
+                    tz = self.env.user.tz
+                    p_first = ''
+                    p_last = ''
+                    if first != datetime(2100, 1, 1):
+                        p_first = format_date(self.env, first.astimezone(timezone(tz)).date())
+                    if last != datetime(1978, 1, 1):
+                        p_last = format_date(self.env, last.astimezone(timezone(tz)).date())
                     lines.append({
                             'id': id,
                             'name': line.get('job_name'),
                             'level': 2,
-                            'unfoldable': True,
+                            'unfoldable': False,
                             'unfolded': line_id == id and True or False,
                             'columns': [{'name': line.get('ref')}, 
                                         {'name': partner_name}, 
                                         {'name': line.get('po')}, 
                                         {'name': line.get('job_type')},
                                         {'name': line.get('notes')},
+                                        {'name': line.get('urgency')},
                                         {'name': order.customer_category}, 
                                         {'name': order.project_manager.name}, 
                                         {'name': order.user_id.name},
                                         {'name': order.name},
+                                        {'name': format_date(self.env, order.confirmation_date)},
+                                        {'name': order.amount_total},
                                         {'name': amref},
                                         {'name': format_date(self.env, line.get('create_date'))},
                                         {'name': format_date(self.env, line.get('deadline_date'))},
-                                        {'name': format_date(self.env, line.get('completed_on'))},
+                                        {'name': format_date(self.env, delivery_date)},
                                         {'name': round(line.get('exp_mins')/60,2)},
                                         {'name': round(line.get('real_mins')/60,2)},
                                         {'name': self.format_value(line_l)},
     #                                     {'name': self.format_value(line_l_b)},
                                         {'name': self.format_value(line_m)},
                                         {'name': self.format_value(line_l_a)},
-                                        {'name': self.format_value(line_m_a)}
+                                        {'name': self.format_value(line_m_a)},
+                                        {'name': rating},
+                                        {'name': equip.poles},
+                                        {'name': equip.voltage},
+                                        {'name': equip.mounting},
+                                        {'name': equip.manufacture},
+                                        {'name': p_first},
+                                        {'name': p_last}
                             ],
                     })
                 line_m = 0
@@ -461,6 +519,16 @@ class ReportWip(models.AbstractModel):
                 'columns': [{'name': v} for v in [
                         '', 
                         '',
+                        '', 
+                        '', 
+                        '', 
+                        '', 
+                        '', 
+                        '', 
+                        '', 
+                        '', 
+                        '', 
+                        '', 
                         '', 
                         '', 
                         '', 
