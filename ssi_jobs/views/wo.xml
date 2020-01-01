@@ -13,6 +13,7 @@
           <field name="arch" type="xml">
             <xpath expr="//tree[1]/field[@name='name']" position="before">
               <field name="ssi_job_id"/>
+              <field name="job_stage"/>
               <field name="job_urgency"/>
               <field name="job_deadline"/>
             </xpath>

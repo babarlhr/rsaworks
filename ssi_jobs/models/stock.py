@@ -9,7 +9,7 @@ class StockPicking(models.Model):
 
     so_job_id = fields.Many2one('ssi_jobs', related='sale_id.ssi_job_id', string='SO Job')
     po_job_id = fields.Many2one('ssi_jobs', related='purchase_id.ssi_job_id', string='PO Job')
-    job_stage = fields.Char(compute='_get_job_stage', string='Job Stage', readonly=True)
+    job_stage = fields.Char(compute='_get_job_stage', string='Job Stage', store=True)
 
     @api.depends('so_job_id', 'po_job_id')
     def _get_job_stage(self):

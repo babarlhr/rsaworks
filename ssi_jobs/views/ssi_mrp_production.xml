@@ -46,6 +46,9 @@
                     <field name="duration_hours" widget="float_time" class="oe_inline"/> hours
                 </div>
               </xpath>
+              <xpath expr="//form[1]/sheet[1]/notebook[1]/page[4]" position="attributes">
+                  <attribute name="groups">mrp.group_jamey</attribute>
+              </xpath>
 		  </field>
       </record>
 

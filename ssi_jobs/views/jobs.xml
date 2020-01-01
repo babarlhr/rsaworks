@@ -71,6 +71,7 @@
                         <field name="po_number"/>
                         <field name="user_id"/>
                         <field name="project_manager"/>
+                        <field name="customer_category"/>
                         <field name="notes"/>
                         <field name="aa_id" attrs="{'readonly': True}"/>
                         <field name="warranty_claim"/>

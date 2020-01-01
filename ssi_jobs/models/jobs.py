@@ -25,15 +25,18 @@ class Jobs(models.Model):
     stage_id = fields.Many2one('ssi_jobs_stage', group_expand='_read_group_stage_ids',
                                default=lambda self: self.env['ssi_jobs_stage'].search([('name', '=', 'New Job')]), string='Stage',
                                track_visibility='onchange')
-#     name = fields.Char(string="Job Name", required=True, copy=False, readonly=True,
-#                        index=True, default=lambda self: _('New'))
-    name = fields.Char(string="Job Name", required=True, copy=False, index=True)
+    name = fields.Char(string="Job Name", required=True, copy=False, readonly=True,
+                       index=True, default=lambda self: _('New'))
+#     name = fields.Char(string="Job Name", required=True, copy=False, index=True)
     partner_id = fields.Many2one(
         'res.partner', string='Customer', ondelete='restrict', required=True,
         domain=[('parent_id', '=', False)])
     opportunity_id = fields.Many2one('crm.lead', string='Opportunity', domain="[('type', '=', 'opportunity')]")
     user_id = fields.Many2one('res.users', related='partner_id.user_id', string='Salesperson')
-    project_manager = fields.Many2one('res.users', related='partner_id.project_manager_id', string='Project Manager', store=True)
+    project_manager = fields.Many2one('res.users', string='Project Manager')
+#     project_manager = fields.Many2one('res.users', related='partner_id.project_manager_id', string='Project Manager', store=True)
+    customer_category = fields.Selection(
+        [('Top Account', 'Top Account'), ('Key Account', 'Key Account'), ('Account', 'Account'), ('New Account', 'New Account'), ('House Account', 'House Account')], string='Customer Category')
     active = fields.Boolean(default=True)
     equipment_id = fields.Many2one('maintenance.equipment', string='Equipment')
 #     deadline_date = fields.Datetime(string='Customer Deadline', required=True, default=datetime.today())
@@ -146,6 +149,20 @@ class Jobs(models.Model):
         return res
         # raise UserError(_(res.id))
 
+
+    @api.onchange('partner_id')
+    def _onchange_partner_pm(self):
+        # When updating partner, auto set project manager.
+        if not self.opportunity_id:
+            if self.partner_id.project_manager_id:
+                self.project_manager = self.partner_id.project_manager_id.id
+            if self.partner_id.customer_category:
+                self.customer_category = self.partner_id.customer_category
+        else:
+            if self.opportunity_id.project_manager:
+                self.project_manager = self.opportunity_id.project_manager.id
+            if self.opportunity_id.customer_category:
+                self.customer_category = self.opportunity_id.customer_category
     @api.model
     def _read_group_stage_ids(self, stages, domain, order):
         stage_ids = self.env['ssi_jobs_stage'].search([])
